@@ -1,6 +1,5 @@
 ---
 import Container from "@/components/container.astro";
-import { Icon } from "astro-icon/components";
 import { projectPath } from "@/lib/project-paths";
 
 const year = new Date().getFullYear();
@@ -21,14 +20,12 @@ const year = new Date().getFullYear();
 
       <nav class="flex flex-wrap gap-x-8 gap-y-3 text-sm">
         <a href={projectPath('/')} class="text-ink-4 hover:text-on-dark transition">Home</a>
-        <a href={projectPath('/research')} class="text-ink-4 hover:text-on-dark transition">Research</a>
-        <a href={projectPath('/about')} class="text-ink-4 hover:text-on-dark transition">About</a>
+        <a href="https://net9.org/" class="text-ink-4 hover:text-on-dark transition">SAST Homepage</a>
         <a
-          href="https://github.com/Einsia"
+          href="https://github.com/THU-CST-SAST/diabagent-web"
           target="_blank"
           rel="noopener"
           class="inline-flex items-center gap-1.5 text-ink-4 hover:text-on-dark transition">
-          <Icon name="bx:bxl-github" class="w-4 h-4" />
           GitHub
         </a>
       </nav>

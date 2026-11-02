@@ -17,7 +17,7 @@ export interface Props {
   description?: string;
 }
 
-const { title, description = "Navers Lab - Einsia — Frontier AI Research" } =
+const { title, description = "DiabAgent: Toward Agentic Physiological Control" } =
   Astro.props;
 
 const configuredSeo = getLabSeo(Astro.url.pathname);
@@ -29,8 +29,8 @@ const seo: LabSeo = configuredSeo ?? {
   ogTitle: title || LAB_SITE_NAME,
   description,
   canonical: new URL(Astro.url.pathname, Astro.site).toString(),
-  image: `${LAB_SITE_URL}/og/home.png`,
-  imageAlt: "Navers Lab - Einsia frontier AI agent research",
+  image: `${LAB_SITE_URL}/brand/sast.png`,
+  imageAlt: "THU CST SAST",
   ogType: "website",
   schemaTypes: ["WebPage"],
 };
