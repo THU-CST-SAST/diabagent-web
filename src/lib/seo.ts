@@ -9,7 +9,7 @@ export interface LabSeo {
   schemaTypes: readonly string[];
 }
 
-export const LAB_SITE_URL = "https://thu-cst-sast.github.io/diabagent-web";
+export const LAB_SITE_URL = import.meta.env.SITE.replace(/\/$/, "");
 export const LAB_SITE_NAME = "Navers Lab - Einsia";
 export const INDEX_ROBOTS =
   "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";

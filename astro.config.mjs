@@ -4,8 +4,8 @@ import sitemap from '@astrojs/sitemap';
 import icon from 'astro-icon';
 
 export default defineConfig({
-  site: process.env.SITE || 'https://thu-cst-sast.github.io',
-  base: process.env.BASE_PATH || '/diabagent-web',
+  site: process.env.SITE || 'https://diabagent.net9.org',
+  base: process.env.BASE_PATH || '/',
   output: 'static',
   trailingSlash: 'always',
   devToolbar: { enabled: false },

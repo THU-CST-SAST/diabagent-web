@@ -18,9 +18,9 @@ npm run dev
 npm run build
 ```
 
-GitHub Actions deploys `main` to GitHub Pages. The default deployment is
-https://thu-cst-sast.github.io/diabagent-web/ . `SITE` and `BASE_PATH` are set
-from the Pages configuration during deployment. No custom domain is configured.
+GitHub Actions deploys `main` to GitHub Pages at https://diabagent.net9.org/ .
+The deployment builds Astro with `SITE=https://diabagent.net9.org` and
+`BASE_PATH=/` so assets and links resolve from the custom domain root.
 
 The original laboratory navigation links remain external where the full
 laboratory website is not part of this standalone project deployment.
