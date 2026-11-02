@@ -1,27 +1,33 @@
 ---
 /** Page switcher shared by the DiabAgent overview and the SweetBench pages. */
-import { projectPath } from "@/lib/project-paths";
+import { pagePath, type Lang } from "@/lib/i18n";
 
 interface Props {
   active: "overview" | "leaderboard" | "tasks" | "runs";
 }
 const { active } = Astro.props;
+const lang = Astro.currentLocale as Lang;
+
+const copy = {
+  zh: { nav: "DiabAgent 页面", overview: "概览", leaderboard: "排行榜", tasks: "任务", runs: "轨迹" },
+  en: { nav: "DiabAgent pages", overview: "Overview", leaderboard: "Leaderboard", tasks: "Tasks", runs: "Runs" },
+}[lang];
 
 const links = [
-  { key: "overview", label: "Overview", href: "/diabagent/" },
-  { key: "leaderboard", label: "Leaderboard", href: "/diabagent/leaderboard/" },
-  { key: "tasks", label: "Tasks", href: "/diabagent/tasks/" },
-  { key: "runs", label: "Runs", href: "/diabagent/runs/" },
+  { key: "overview", label: copy.overview, href: "/diabagent/" },
+  { key: "leaderboard", label: copy.leaderboard, href: "/diabagent/leaderboard/" },
+  { key: "tasks", label: copy.tasks, href: "/diabagent/tasks/" },
+  { key: "runs", label: copy.runs, href: "/diabagent/runs/" },
 ];
 ---
 
-<nav class="da-subnav" aria-label="DiabAgent pages">
-  <a href={projectPath("/diabagent/")} class="da-subnav-brand">DiabAgent</a>
+<nav class="da-subnav" aria-label={copy.nav}>
+  <a href={pagePath(lang, "/diabagent/")} class="da-subnav-brand">DiabAgent</a>
   <div class="da-subnav-links">
     {
       links.map((link) => (
         <a
-          href={projectPath(link.href)}
+          href={pagePath(lang, link.href)}
           class:list={[active === link.key && "is-active"]}
           aria-current={active === link.key ? "page" : undefined}>
           {link.label}

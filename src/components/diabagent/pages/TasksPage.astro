@@ -1,0 +1,130 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import EventLane from "@/components/diabagent/EventLane.astro";
+import SubNav from "@/components/diabagent/SubNav.astro";
+import { FACTS, contentFor, modelById, score1 } from "@/lib/diabagent.js";
+import { pagePath, type Lang } from "@/lib/i18n";
+import "@/styles/pptbench.css";
+import "@/styles/diabagent.css";
+
+const lang = Astro.currentLocale as Lang;
+const { EVENT_STYLES, groupScores, templates } = contentFor(lang);
+
+const copy = {
+  zh: {
+    title: "DiabAgent 任务",
+    description: "SweetBench 的 212 个任务：7 组共 32 个场景模板，每个模板在四到八个虚拟个体上实例化。",
+    heading: "任务",
+    intro: `由 ${FACTS.groups} 组共 ${FACTS.templates} 个场景模板构建的 ${FACTS.tasks} 个固定配置。所有模型面对相同的事件和传感器噪声。`,
+    anatomy: [
+      { title: "一个虚拟个体", body: "八种类型，年龄从 9 岁到 70 岁。" },
+      { title: "隐藏的事件日历", body: "进餐、运动、疾病和故障都不会告知智能体。" },
+      { title: "泵和传感器", body: "Dana-i 胰岛素泵，以及带误差和延迟的实时 CGM。" },
+      { title: "72 小时", body: "每小时决策一次，每个本地自然日至多再增加六次事件触发的决策。" },
+    ],
+    groupsLabel: "场景分组",
+    calendar: "隐藏事件日历，72 小时：",
+    note: "每行的数字是最佳模型的平均 COGI。展开后可查看各个体。",
+    bestModel: (name: string) => `最佳模型：${name}`,
+    back: "← 返回 DiabAgent",
+  },
+  en: {
+    title: "DiabAgent tasks",
+    description: "The 212 tasks of SweetBench: 32 scenario templates in 7 groups, each instantiated on four to eight virtual people.",
+    heading: "Tasks",
+    intro: `${FACTS.tasks} fixed configurations built from ${FACTS.templates} scenario templates in ${FACTS.groups} groups. Every model faces the same events and sensor noise.`,
+    anatomy: [
+      { title: "One virtual person", body: "Eight types, aged 9 to 70." },
+      { title: "A hidden event calendar", body: "Meals, exercise, illness and faults are never reported to the agent." },
+      { title: "Pump and sensor", body: "A Dana-i pump and a real-time CGM with sensor error and delay." },
+      { title: "72 hours", body: "Hourly decisions, plus up to six event-triggered decisions per local day." },
+    ],
+    groupsLabel: "Scenario groups",
+    calendar: "Hidden event calendar, 72 hours:",
+    note: "Each row's number is the best model's mean COGI. Open a row to see its people.",
+    bestModel: (name: string) => `Best model: ${name}`,
+    back: "← Back to DiabAgent",
+  },
+}[lang];
+
+const legend = Object.entries(EVENT_STYLES)
+  .filter(([key]) => !["alcohol_effect", "sensor_calibration_error"].includes(key))
+  .map(([, style]: any) => style);
+---
+
+<Layout title={copy.title} description={copy.description}>
+  <article class="pptbench-page diabagent-page max-w-5xl mx-auto px-5 sm:px-8">
+    <SubNav active="tasks" />
+    <header class="pptbench-hero pt-12 md:pt-16">
+      <h1 class="da-page-title font-serif font-bold tracking-tight text-ink">{copy.heading}</h1>
+      <p class="pptbench-subtitle mt-5">{copy.intro}</p>
+    </header>
+
+    <section class="da-section mt-10">
+      <ul class="da-parts is-four">
+        {
+          copy.anatomy.map((item) => (
+            <li>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <nav class="da-chips mt-12" aria-label={copy.groupsLabel}>
+      {groupScores.map((group: any) => <a href={`#group-${group.id}`}>{group.name}</a>)}
+    </nav>
+
+    <div class="da-legend-row mt-6">
+      <span>{copy.calendar}</span>
+      <ul class="da-legend">
+        {legend.map((style: any) => <li><i style={`background:${style.color}`} />{style.label}</li>)}
+      </ul>
+    </div>
+    <p class="da-score-note mt-3">{copy.note}</p>
+
+    {
+      groupScores.map((group: any) => (
+        <section id={`group-${group.id}`} class="da-section da-group mt-14">
+          <h2>{group.name}</h2>
+          <p class="da-lede mt-2">{group.line}</p>
+          <div class="da-templates mt-6">
+            {templates
+              .filter((template: any) => template.group === group.id)
+              .map((template: any) => (
+                <details class="da-template">
+                  <summary>
+                    <span class="da-template-id">{template.id}</span>
+                    <span class="da-template-title">{template.title}</span>
+                    <span class="da-template-score" title={copy.bestModel(modelById[template.best].name)}>
+                      <i class="da-dot" style={`background:${modelById[template.best].color}`} />
+                      {score1(template.scores[template.best])}
+                    </span>
+                    <EventLane events={template.events} />
+                  </summary>
+                  <ul class="da-instances">
+                    {template.instances.map((instance: any) => (
+                      <li>
+                        <a href={pagePath(lang, `/diabagent/runs/?task=${instance.key}&model=${instance.best}`)}>
+                          <span>{instance.label}</span>
+                          <strong>{score1(instance.scores[instance.best])}</strong>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ))}
+          </div>
+        </section>
+      ))
+    }
+
+    <div class="mt-16 mb-24 border-t border-line pt-6">
+      <a href={pagePath(lang, "/diabagent/")} class="inline-flex items-center gap-1 text-[0.95rem] text-accent hover:text-accent-hover transition">
+        {copy.back}
+      </a>
+    </div>
+  </article>
+</Layout>

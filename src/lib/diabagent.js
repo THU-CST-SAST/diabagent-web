@@ -5,6 +5,8 @@
  * scripts/build-diabagent-data.py from the Main212 records; edit the source and
  * re-run the script instead of editing them by hand. The ablation tables below
  * are copied from the paper.
+ *
+ * Everything here is in English; contentFor("zh") adds diabagent.zh.js on top.
  */
 
 import fs from "node:fs";
@@ -12,13 +14,22 @@ import path from "node:path";
 import { gunzipSync } from "node:zlib";
 import leaderboard from "../data/diabagent/leaderboard.json";
 import taskData from "../data/diabagent/tasks.json";
+import zh from "./diabagent.zh.js";
 
-export const { models, baselines, groups: groupScores, cohorts } = leaderboard;
-export const { groups, templates } = taskData;
+// Site palette; the generated file keeps its own colors for other uses.
+const MODEL_COLORS = {
+  opus55: "#a8432a",
+  gpt61: "#1f3f5f",
+  deepseek41: "#2f6f6b",
+  kimi31: "#6a6f33",
+  glm53flash: "#6d4a7d",
+};
+
+export const models = leaderboard.models.map((m) => ({ ...m, color: MODEL_COLORS[m.id] ?? m.color }));
 export const modelById = Object.fromEntries(models.map((m) => [m.id, m]));
 
-export const TITLE = "DiabAgent: Toward Agentic Physiological Control";
-export const META = "Tsinghua University · Sweetie Online Community · Einsia AI · 2026";
+const TITLE = "DiabAgent: Toward Agentic Physiological Control";
+const META = "Tsinghua University · Sweetie Online Community · Einsia AI · 2026";
 
 export const FACTS = {
   tasks: 212,
@@ -29,67 +40,61 @@ export const FACTS = {
 };
 
 // An empty href renders as a disabled "coming soon" button.
-export const heroLinks = [
+const heroLinks = [
   { label: "Benchmark", href: "/diabagent/leaderboard/", style: "primary" },
   { label: "Paper", href: "", style: "outline" },
   { label: "Code", href: "", style: "outline" },
 ];
 
-// Paper constants: what DiabetSim can vary.
-export const simDimensions = [
-  { value: "8", title: "People", body: "Child to older adult, male and female." },
-  { value: "29", title: "Devices", body: "5 pumps, 10 pens, 8 sensors and 6 meters." },
-  { value: "7", title: "Event groups", body: "Meals, past doses, exercise, changing needs, pump faults, sensor errors, illness." },
-  { value: "3", title: "Observation levels", body: "From free-text reports down to sensor and device alone." },
+// Simulator capabilities, not the fixed SweetBench cohort. Counts exclude test models.
+const simDimensions = [
+  { value: "Custom", title: "Patient parameters", body: "Configure sex, age, height, weight, starting glucose, insulin sensitivity and treatment profile. Presets are starting points, not a fixed patient catalogue." },
+  { value: "Mix", title: "Events and disturbances", body: "Combine meals and absorption, aerobic or anaerobic exercise, alcohol, stress, sleep loss, menstrual cycles, illness, earlier treatments, infusion faults and sensor errors. Configure timing, duration, magnitude and randomness." },
+  { value: "6", title: "Device and therapy categories", body: "5 pumps, 10 pens, 8 CGM configurations and 6 meter configurations; 10 insulins and 2 principal closed-loop algorithms (HCL and oref1). An ideal pump and 2 sensor test models are also available." },
+  { value: "3", title: "Information presets", body: "Full reports, partial reports, or sensor and device data alone. Reporting probability, delay, errors and event-specific masking are configurable." },
 ];
 
-// The recorded day shown in the overview video.
-export const video = {
-  src: "/diabagent/video/one-day.mp4",
-  poster: "/diabagent/video/poster.jpg",
-  run: "/diabagent/runs/?task=c04-child-male&model=opus55&day=3",
-};
-
 // Hand-picked runs, opened from the overview and the Runs page.
-export const featured = [
+const featured = [
   {
     key: "c04-child-male",
     tag: "Largest lead",
-    line: "No breakfast, no lunch, hours of exercise. None of it reported.",
+    line: "Breakfast and lunch are skipped during hours of exercise, none of it reported.",
   },
   {
     key: "b03-adult-male",
     tag: "Highest score",
-    line: "A cancelled meal, with insulin still on its way.",
+    line: "A meal is cancelled while extended insulin is still being delivered.",
   },
   {
     key: "c04-older-male",
-    tag: "Fastest learner",
-    line: "The same hidden routine, handled better each day.",
+    tag: "Fastest improvement",
+    line: "The same hidden routine is handled better each day.",
   },
   {
     key: "e04-adolescent-female",
     tag: "Where it fails",
-    line: "It finds a leaking set once, then misses the leak when it returns.",
+    line: "It finds the leaking infusion set once, then misses the leak when it returns.",
   },
 ];
 
 // Paper table: seven-day record and reflection ablation, mean daily COGI.
-export const weekLearning = [
-  { name: "Record + end-of-day plan", color: "#E07B4F", days: [72.7, 72.3, 73.0, 83.8, 80.6, 83.2, 85.6] },
-  { name: "Cross-day record", color: "#5E8CA8", days: [73.1, 71.5, 71.5, 76.6, 72.1, 75.2, 80.5] },
-  { name: "No cross-day record", color: "#a4b0a2", days: [72.6, 67.5, 66.9, 76.3, 70.7, 70.2, 73.9] },
+const weekLearning = [
+  { name: "Record + plan + feedback", color: "#2f6f6b", days: [74.3, 72.1, 73.4, 85.6, 79.3, 82.3, 86.3] },
+  { name: "Record + review plan", color: "#a8432a", days: [72.7, 72.3, 73.0, 83.8, 80.6, 83.2, 85.6] },
+  { name: "Cross-day record only", color: "#1f3f5f", days: [73.1, 71.5, 71.5, 76.6, 72.1, 75.2, 80.5] },
+  { name: "Daily record reset", color: "#8a9096", days: [72.6, 67.5, 66.9, 76.3, 70.7, 70.2, 73.9] },
 ];
 
 // Paper table: delivery devices, whole-episode COGI.
-export const deviceStudy = [
+const deviceStudy = [
   { name: "Slow-meal overlap", who: "Woman, 39 y", pens: 74.61, pump: 80.56, hcl: 85.19 },
   { name: "Stress resolution", who: "Boy, 15 y", pens: 72.33, pump: 80.22, hcl: 82.75 },
   { name: "Post-illness refeeding", who: "Boy, 9 y", pens: 67.1, pump: 74.67, hcl: 74.51 },
 ];
 
 // Paper table: information condition against decision interval, one scenario.
-export const contextStudy = {
+const contextStudy = {
   name: "Infusion-site leakage",
   intervals: ["15 min", "30 min", "60 min", "120 min"],
   rows: [
@@ -112,6 +117,59 @@ export const EVENT_STYLES = {
   sensor_calibration_error: { label: "Bad calibration", color: "#4f8a8b" },
 };
 
+/** A missing translation stops the build instead of showing a blank. */
+function zhText(table, key) {
+  if (table[key] === undefined) throw new Error(`Missing Chinese text: ${key}`);
+  return table[key];
+}
+
+const CONTENT = {
+  en: {
+    TITLE,
+    META,
+    heroLinks,
+    simDimensions,
+    featured,
+    weekLearning,
+    deviceStudy,
+    contextStudy,
+    EVENT_STYLES,
+    baselines: leaderboard.baselines,
+    groupScores: leaderboard.groups,
+    cohorts: leaderboard.cohorts,
+    groups: taskData.groups,
+    templates: taskData.templates,
+  },
+  zh: {
+    TITLE: zh.TITLE,
+    META: zh.META,
+    heroLinks: heroLinks.map((link) => ({ ...link, label: zhText(zh.heroLinks, link.label) })),
+    simDimensions: simDimensions.map((item) => ({ ...item, ...zhText(zh.simDimensions, item.title) })),
+    featured: featured.map((item) => ({ ...item, ...zhText(zh.featured, item.key) })),
+    weekLearning: weekLearning.map((line) => ({ ...line, name: zhText(zh.weekLearning, line.name) })),
+    deviceStudy: deviceStudy.map((row) => ({ ...row, name: zhText(zh.deviceStudy, row.name) })),
+    contextStudy: {
+      intervals: contextStudy.intervals.map((label) => zhText(zh.contextIntervals, label)),
+      rows: contextStudy.rows.map((row) => ({ ...row, name: zhText(zh.contextRows, row.code) })),
+    },
+    EVENT_STYLES: Object.fromEntries(
+      Object.entries(EVENT_STYLES).map(([key, style]) => [key, { ...style, label: zhText(zh.events, key) }]),
+    ),
+    baselines: leaderboard.baselines.map((row) => ({ ...row, name: zhText(zh.baselines, row.name) })),
+    groupScores: leaderboard.groups.map((group) => ({ ...group, ...zhText(zh.groups, group.id) })),
+    cohorts: leaderboard.cohorts.map((cohort) => ({ ...cohort, name: zhText(zh.cohorts, cohort.name) })),
+    groups: taskData.groups.map((group) => ({ ...group, ...zhText(zh.groups, group.id) })),
+    templates: taskData.templates.map((template) => ({
+      ...template,
+      title: zhText(zh.templates, template.id),
+      instances: template.instances.map((row) => ({ ...row, label: zhText(zh.people, row.label) })),
+    })),
+  },
+};
+
+/** The site's data with its text in one language. */
+export const contentFor = (lang) => CONTENT[lang];
+
 export const score = (value) => Number(value).toFixed(2);
 export const score1 = (value) => Number(value).toFixed(1);
 
@@ -122,8 +180,8 @@ export function loadRun(key) {
 }
 
 /** Catalogue entry for a task key. */
-export function findTask(key) {
-  for (const template of templates) {
+export function findTask(key, lang) {
+  for (const template of CONTENT[lang].templates) {
     const instance = template.instances.find((row) => row.key === key);
     if (instance) return { template, instance };
   }

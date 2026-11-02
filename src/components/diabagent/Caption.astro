@@ -1,0 +1,9 @@
+---
+/** A numbered figure caption, for use inside a <figure>. */
+interface Props {
+  n: number;
+}
+const { n } = Astro.props;
+---
+
+<figcaption class="da-caption"><b>{Astro.currentLocale === "zh" ? `图 ${n}` : `Fig. ${n}`}</b><slot /></figcaption>

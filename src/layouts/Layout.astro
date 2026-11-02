@@ -1,6 +1,8 @@
 ---
 import Footer from "@/components/footer.astro";
 import Navbar from "@/components/navbar/navbar.astro";
+import { contentFor } from "@/lib/diabagent.js";
+import { pageOf, pagePath, type Lang } from "@/lib/i18n";
 import { projectPath } from "@/lib/project-paths";
 import {
   getLabSeo,
@@ -17,8 +19,9 @@ export interface Props {
   description?: string;
 }
 
-const { title, description = "DiabAgent: Toward Agentic Physiological Control" } =
-  Astro.props;
+const lang = Astro.currentLocale as Lang;
+const { title, description = contentFor(lang).TITLE } = Astro.props;
+const page = pageOf(Astro.url.pathname);
 
 const configuredSeo = getLabSeo(Astro.url.pathname);
 const fallbackTitle = title
@@ -38,7 +41,7 @@ const structuredData = getLabStructuredData(seo);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang === "zh" ? "zh-CN" : "en"}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -53,7 +56,9 @@ const structuredData = getLabStructuredData(seo);
       content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
     />
     <link rel="canonical" href={seo.canonical} />
-    <meta property="og:locale" content="en_US" />
+    <link rel="alternate" hreflang="zh-CN" href={new URL(pagePath("zh", page), Astro.site).toString()} />
+    <link rel="alternate" hreflang="en" href={new URL(pagePath("en", page), Astro.site).toString()} />
+    <meta property="og:locale" content={lang === "zh" ? "zh_CN" : "en_US"} />
     <meta property="og:type" content={seo.ogType} />
     <meta property="og:site_name" content={LAB_SITE_NAME} />
     <meta property="og:title" content={seo.ogTitle} />

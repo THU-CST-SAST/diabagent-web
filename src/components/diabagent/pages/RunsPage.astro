@@ -1,0 +1,38 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import RunViewer from "@/components/diabagent/RunViewer.astro";
+import SubNav from "@/components/diabagent/SubNav.astro";
+import { FACTS } from "@/lib/diabagent.js";
+import type { Lang } from "@/lib/i18n";
+import "@/styles/pptbench.css";
+import "@/styles/diabagent.css";
+
+const lang = Astro.currentLocale as Lang;
+const trajectories = FACTS.trajectories.toLocaleString("en-US");
+const copy = {
+  zh: {
+    title: "DiabAgent 轨迹",
+    description: `全部 ${trajectories} 条 DiabAgent 轨迹：真实血糖和传感器血糖、隐藏事件，以及每个动作的理由。`,
+    heading: "轨迹",
+    intro: `全部 ${trajectories} 条轨迹。可以对比智能体所见和实际情况，并查看每个动作的理由。`,
+  },
+  en: {
+    title: "DiabAgent runs",
+    description: `All ${trajectories} DiabAgent trajectories: true and sensor glucose, hidden events, and the reason for every action.`,
+    heading: "Runs",
+    intro: `All ${trajectories} trajectories. Compare what the agent saw with what actually happened, and read the reason for each action.`,
+  },
+}[lang];
+---
+
+<Layout title={copy.title} description={copy.description}>
+  <article class="pptbench-page diabagent-page max-w-5xl mx-auto px-5 sm:px-8">
+    <SubNav active="runs" />
+    <header class="pptbench-hero pt-12 md:pt-16">
+      <h1 class="da-page-title font-serif font-bold tracking-tight text-ink">{copy.heading}</h1>
+      <p class="pptbench-subtitle mt-5">{copy.intro}</p>
+    </header>
+    <RunViewer />
+    <div class="mb-24"></div>
+  </article>
+</Layout>

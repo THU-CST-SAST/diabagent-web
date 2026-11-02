@@ -4,13 +4,128 @@
  * trajectories are fetched on demand as one gzip file, so the 1,060 runs cost
  * nothing until someone opens them.
  */
+import { contentFor, findTask, models } from "@/lib/diabagent.js";
+import type { Lang } from "@/lib/i18n";
 import { projectPath } from "@/lib/project-paths";
-import { EVENT_STYLES, featured, findTask, groups, models, templates } from "@/lib/diabagent.js";
+
+const lang = Astro.currentLocale as Lang;
+const { EVENT_STYLES, featured, groups, templates } = contentFor(lang);
+
+const copy = {
+  zh: {
+    featured: "精选轨迹",
+    scenario: "场景",
+    person: "个体",
+    model: "模型",
+    pointOfView: "视角",
+    truth: "实际情况",
+    agent: "智能体所见",
+    timeRange: "时间范围",
+    allHours: "72 小时",
+    legend: "图例",
+    loadError: "无法加载这条轨迹。",
+    why: "每个动作的理由",
+    whyNote: "理由为模型的英文原始输出，未作翻译。",
+    previous: "上一个动作",
+    next: "下一个动作",
+    // Read by the script below.
+    client: {
+      day: "第 {n} 天",
+      comma: "，",
+      replay: "回放",
+      stop: "停止",
+      timeInRange: "4–8 mmol/L 内时间",
+      timeBelow: "低于 70 mg/dL 时间",
+      actionCount: "动作数",
+      sensorGlucose: "传感器血糖",
+      trueGlucose: "真实血糖",
+      insulinDose: "胰岛素剂量",
+      carbs: "碳水",
+      pumpRepair: "更换管路、暂停或恢复泵",
+      otherAction: "其他设备操作",
+      chartLabel: "血糖轨迹",
+      target: "目标 72–144 mg/dL",
+      hiddenFromAgent: "进餐、运动和故障对智能体隐藏",
+      hiddenEvents: "隐藏事件",
+      basal: "基础率（占计划的百分比）",
+      actions: "动作",
+      actionNames: {
+        BOLUS: "大剂量",
+        TEMP_BASAL: "临时基础率",
+        CANCEL_TEMP_BASAL: "取消临时基础率",
+        INGEST_CARBS: "补充碳水",
+        CALIBRATE_CGM: "校准传感器",
+        MEASURE_BG: "指尖血检测",
+        EXTENDED_BOLUS: "方波大剂量",
+        CANCEL_EXTENDED_BOLUS: "取消方波大剂量",
+        CANCEL_BOLUS: "取消大剂量",
+        CHANGE_INFUSION_SET: "更换管路",
+        SUSPEND_PUMP: "暂停泵",
+        RESUME_PUMP: "恢复泵",
+      },
+    },
+  },
+  en: {
+    featured: "Featured runs",
+    scenario: "Scenario",
+    person: "Person",
+    model: "Model",
+    pointOfView: "Point of view",
+    truth: "What actually happened",
+    agent: "What the agent saw",
+    timeRange: "Time range",
+    allHours: "72 h",
+    legend: "Chart legend",
+    loadError: "This run could not be loaded.",
+    why: "Reason for each action",
+    whyNote: "",
+    previous: "Previous action",
+    next: "Next action",
+    // Read by the script below.
+    client: {
+      day: "Day {n}",
+      comma: ", ",
+      replay: "Replay",
+      stop: "Stop",
+      timeInRange: "Time in 4–8 mmol/L",
+      timeBelow: "Time below 70 mg/dL",
+      actionCount: "Actions",
+      sensorGlucose: "Sensor glucose",
+      trueGlucose: "True glucose",
+      insulinDose: "Insulin dose",
+      carbs: "Carbs",
+      pumpRepair: "Set change, suspend or resume",
+      otherAction: "Other device action",
+      chartLabel: "Glucose trajectory",
+      target: "Target 72–144 mg/dL",
+      hiddenFromAgent: "Meals, exercise and faults: hidden from the agent",
+      hiddenEvents: "Hidden events",
+      basal: "Basal rate, % of schedule",
+      actions: "Actions",
+      actionNames: {
+        BOLUS: "Bolus",
+        TEMP_BASAL: "Temp basal",
+        CANCEL_TEMP_BASAL: "Cancel temp basal",
+        INGEST_CARBS: "Carbs",
+        CALIBRATE_CGM: "Calibrate sensor",
+        MEASURE_BG: "Meter check",
+        EXTENDED_BOLUS: "Extended bolus",
+        CANCEL_EXTENDED_BOLUS: "Cancel extended bolus",
+        CANCEL_BOLUS: "Cancel bolus",
+        CHANGE_INFUSION_SET: "Change infusion set",
+        SUSPEND_PUMP: "Suspend pump",
+        RESUME_PUMP: "Resume pump",
+      },
+    },
+  },
+}[lang];
+const dayLabel = (n: number) => copy.client.day.replace("{n}", String(n));
 
 const catalogue = {
   base: projectPath("/diabagent/runs/"),
   models: models.map((m: any) => ({ id: m.id, name: m.name, color: m.color })),
   events: EVENT_STYLES,
+  text: copy.client,
   templates: templates.map((t: any) => ({
     id: t.id,
     group: t.group,
@@ -20,13 +135,13 @@ const catalogue = {
 };
 
 const picks = featured.map((item: any) => {
-  const { template, instance } = findTask(item.key);
+  const { template, instance } = findTask(item.key, lang);
   return { key: item.key, tag: item.tag, label: `${template.id} · ${instance.label}` };
 });
 ---
 
 <div id="da-runs" class="da-runs">
-  <ul class="da-picks mt-8" aria-label="Featured runs">
+  <ul class="da-picks mt-8" aria-label={copy.featured}>
     {
       picks.map((pick) => (
         <li>
@@ -41,7 +156,7 @@ const picks = featured.map((item: any) => {
 
   <div class="da-pickers mt-6">
     <label>
-      <span>Scenario</span>
+      <span>{copy.scenario}</span>
       <select id="da-template">
         {
           groups.map((group: any) => (
@@ -55,42 +170,43 @@ const picks = featured.map((item: any) => {
       </select>
     </label>
     <label>
-      <span>Person</span>
+      <span>{copy.person}</span>
       <select id="da-person"></select>
     </label>
   </div>
 
-  <div id="da-models" class="da-models mt-4" role="group" aria-label="Model"></div>
+  <div id="da-models" class="da-models mt-4" role="group" aria-label={copy.model}></div>
 
   <section class="da-stage mt-6">
     <div class="da-stage-bar">
-      <div class="da-toggle" role="group" aria-label="Point of view">
-        <button type="button" data-view="truth" aria-pressed="true">What really happened</button>
-        <button type="button" data-view="agent" aria-pressed="false">What the agent saw</button>
+      <div class="da-toggle" role="group" aria-label={copy.pointOfView}>
+        <button type="button" data-view="truth" aria-pressed="true">{copy.truth}</button>
+        <button type="button" data-view="agent" aria-pressed="false">{copy.agent}</button>
       </div>
-      <div class="da-toggle" role="group" aria-label="Time range">
-        <button type="button" data-day="0" aria-pressed="true">72 h</button>
-        <button type="button" data-day="1" aria-pressed="false">Day 1</button>
-        <button type="button" data-day="2" aria-pressed="false">Day 2</button>
-        <button type="button" data-day="3" aria-pressed="false">Day 3</button>
+      <div class="da-toggle" role="group" aria-label={copy.timeRange}>
+        <button type="button" data-day="0" aria-pressed="true">{copy.allHours}</button>
+        <button type="button" data-day="1" aria-pressed="false">{dayLabel(1)}</button>
+        <button type="button" data-day="2" aria-pressed="false">{dayLabel(2)}</button>
+        <button type="button" data-day="3" aria-pressed="false">{dayLabel(3)}</button>
       </div>
-      <button type="button" id="da-play" class="da-play">Replay</button>
+      <button type="button" id="da-play" class="da-play">{copy.client.replay}</button>
     </div>
     <div id="da-chart" class="da-chart"></div>
-    <ul id="da-chart-legend" class="da-legend da-chart-legend" aria-label="Chart legend"></ul>
-    <p id="da-error" class="da-error" hidden>This run could not be loaded.</p>
+    <ul id="da-chart-legend" class="da-legend da-chart-legend" aria-label={copy.legend}></ul>
+    <p id="da-error" class="da-error" hidden>{copy.loadError}</p>
   </section>
 
   <dl id="da-stats" class="da-facts is-five mt-6"></dl>
 
   <section class="da-section mt-10">
     <div class="da-log-head">
-      <h2>Why it did that</h2>
+      <h2>{copy.why}</h2>
       <div class="da-log-nav">
-        <button type="button" id="da-prev" aria-label="Previous action">←</button>
-        <button type="button" id="da-next" aria-label="Next action">→</button>
+        <button type="button" id="da-prev" aria-label={copy.previous}>←</button>
+        <button type="button" id="da-next" aria-label={copy.next}>→</button>
       </div>
     </div>
+    {copy.whyNote && <p class="da-score-note mt-2">{copy.whyNote}</p>}
     <div id="da-current" class="da-current mt-4" aria-live="polite"></div>
     <ol id="da-log" class="da-log mt-5"></ol>
   </section>
@@ -126,6 +242,7 @@ const picks = featured.map((item: any) => {
 
   const root = document.getElementById("da-runs")!;
   const catalogue = JSON.parse(document.getElementById("da-catalogue")!.textContent!);
+  const t = catalogue.text;
   const $ = (id: string) => document.getElementById(id)!;
   const templateSelect = $("da-template") as HTMLSelectElement;
   const personSelect = $("da-person") as HTMLSelectElement;
@@ -154,23 +271,12 @@ const picks = featured.map((item: any) => {
     return `${String(Math.floor(local / 60)).padStart(2, "0")}:${String(local % 60).padStart(2, "0")}`;
   }
   const dayOf = (minute: number) => Math.min(3, Math.floor(minute / 1440) + 1);
+  const dayLabel = (day: number) => t.day.replace("{n}", String(day));
 
+  const DOSE_UNIT: Record<string, string> = { BOLUS: " U", TEMP_BASAL: "%", INGEST_CARBS: " g", EXTENDED_BOLUS: " U" };
   function actionLabel(kind: string, dose: number | null) {
-    switch (kind) {
-      case "BOLUS": return `Bolus ${dose} U`;
-      case "TEMP_BASAL": return dose == null ? "Temp basal" : `Temp basal ${dose}%`;
-      case "CANCEL_TEMP_BASAL": return "Cancel temp basal";
-      case "INGEST_CARBS": return `Carbs ${dose} g`;
-      case "CALIBRATE_CGM": return "Calibrate sensor";
-      case "MEASURE_BG": return "Meter check";
-      case "EXTENDED_BOLUS": return dose == null ? "Extended bolus" : `Extended bolus ${dose} U`;
-      case "CANCEL_EXTENDED_BOLUS": return "Cancel extended bolus";
-      case "CANCEL_BOLUS": return "Cancel bolus";
-      case "CHANGE_INFUSION_SET": return "Change infusion set";
-      case "SUSPEND_PUMP": return "Suspend pump";
-      case "RESUME_PUMP": return "Resume pump";
-      default: return kind;
-    }
+    const name = t.actionNames[kind] ?? kind;
+    return dose != null && DOSE_UNIT[kind] ? `${name} ${dose}${DOSE_UNIT[kind]}` : name;
   }
   const ACTION_COLOR: Record<string, string> = {
     BOLUS: "#6d5aa8",
@@ -232,10 +338,10 @@ const picks = featured.map((item: any) => {
   function renderStats(run: Run) {
     const items = [
       ["COGI", run.score.toFixed(2)],
-      ["Time in 4–8 mmol/L", `${run.tir.toFixed(1)}%`],
-      ["Time below 70 mg/dL", `${run.below.toFixed(1)}%`],
-      ["Actions", String(run.acts.length)],
-      ["Day 1 → Day 3", `${run.daily[0].toFixed(0)} → ${run.daily[2].toFixed(0)}`],
+      [t.timeInRange, `${run.tir.toFixed(1)}%`],
+      [t.timeBelow, `${run.below.toFixed(1)}%`],
+      [t.actionCount, String(run.acts.length)],
+      [`${dayLabel(1)} → ${dayLabel(3)}`, `${run.daily[0].toFixed(0)} → ${run.daily[2].toFixed(0)}`],
     ];
     $("da-stats").innerHTML = items
       .map(([label, value]) => `<div class="da-fact"><dt>${label}</dt><dd>${value}</dd></div>`)
@@ -246,8 +352,8 @@ const picks = featured.map((item: any) => {
   function renderLegend(task: Task, run: Run) {
     const agent = state.view === "agent";
     const items: [string, string][] = agent
-      ? [["Sensor glucose", "var(--color-ink)"]]
-      : [["True glucose", modelInfo(state.model).color], ["Sensor glucose", "var(--color-ink-4)"]];
+      ? [[t.sensorGlucose, "var(--color-ink)"]]
+      : [[t.trueGlucose, modelInfo(state.model).color], [t.sensorGlucose, "var(--color-ink-4)"]];
     if (!agent) {
       const seen = new Set<string>();
       for (const [, , type] of task.events) {
@@ -259,10 +365,10 @@ const picks = featured.map((item: any) => {
       }
     }
     const kinds = new Set(run.acts.map(([, kind]) => actionColor(kind)));
-    if (kinds.has(ACTION_COLOR.BOLUS)) items.push(["Insulin dose", ACTION_COLOR.BOLUS]);
-    if (kinds.has(ACTION_COLOR.INGEST_CARBS)) items.push(["Carbs", ACTION_COLOR.INGEST_CARBS]);
-    if (kinds.has(ACTION_COLOR.CHANGE_INFUSION_SET)) items.push(["Pump repair or suspend", ACTION_COLOR.CHANGE_INFUSION_SET]);
-    if (kinds.has(actionColor("TEMP_BASAL"))) items.push(["Other device action", actionColor("TEMP_BASAL")]);
+    if (kinds.has(ACTION_COLOR.BOLUS)) items.push([t.insulinDose, ACTION_COLOR.BOLUS]);
+    if (kinds.has(ACTION_COLOR.INGEST_CARBS)) items.push([t.carbs, ACTION_COLOR.INGEST_CARBS]);
+    if (kinds.has(ACTION_COLOR.CHANGE_INFUSION_SET)) items.push([t.pumpRepair, ACTION_COLOR.CHANGE_INFUSION_SET]);
+    if (kinds.has(actionColor("TEMP_BASAL"))) items.push([t.otherAction, actionColor("TEMP_BASAL")]);
     $("da-chart-legend").innerHTML = items
       .map(([label, color]) => `<li><i style="background:${color}"></i>${escapeHtml(label)}</li>`)
       .join("");
@@ -274,10 +380,10 @@ const picks = featured.map((item: any) => {
     const [m, kind, dose, why] = run.acts[state.selected];
     $("da-current").innerHTML = `
       <div class="da-current-head">
-        <span class="da-when">Day ${dayOf(m)} · ${clock(m)}</span>
+        <span class="da-when">${dayLabel(dayOf(m))} · ${clock(m)}</span>
         <span class="da-action" style="--action:${actionColor(kind)}">${escapeHtml(actionLabel(kind, dose))}</span>
       </div>
-      <p>${escapeHtml(why)}</p>`;
+      <p lang="en">${escapeHtml(why)}</p>`;
     $("da-log").querySelectorAll("li").forEach((row, i) => {
       row.classList.toggle("is-selected", i === state.selected);
       if (i === state.selected && scroll) {
@@ -293,9 +399,9 @@ const picks = featured.map((item: any) => {
       .map(
         ([m, kind, dose, why], i) => `<li data-index="${i}">
           <button type="button">
-            <span class="da-when">Day ${dayOf(m)} · ${clock(m)}</span>
+            <span class="da-when">${dayLabel(dayOf(m))} · ${clock(m)}</span>
             <span class="da-action" style="--action:${actionColor(kind)}">${escapeHtml(actionLabel(kind, dose))}</span>
-            <span class="da-why">${escapeHtml(why)}</span>
+            <span class="da-why" lang="en">${escapeHtml(why)}</span>
           </button>
         </li>`,
       )
@@ -346,16 +452,16 @@ const picks = featured.map((item: any) => {
       return d;
     };
 
-    let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Glucose trajectory">`;
+    let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${t.chartLabel}">`;
 
     // Target band and low line.
-    svg += `<rect x="${margin.left}" y="${y(144)}" width="${width - margin.left - margin.right}" height="${y(72) - y(144)}" fill="var(--color-paper-3)"/>`;
+    svg += `<rect x="${margin.left}" y="${y(144)}" width="${width - margin.left - margin.right}" height="${y(72) - y(144)}" fill="var(--color-paper-2)"/>`;
     svg += `<line x1="${margin.left}" x2="${width - margin.right}" y1="${y(70)}" y2="${y(70)}" stroke="#b4483c" stroke-width="1" stroke-dasharray="3 4"/>`;
     for (const v of [70, 144, 180, 250, 350]) {
       if (v > top) continue;
       svg += `<text x="${margin.left - 6}" y="${y(v) + 4}" text-anchor="end" class="da-axis">${v}</text>`;
     }
-    svg += `<text x="${margin.left + 8}" y="${y(144) + 19}" class="da-chart-note">Target 72–144 mg/dL</text>`;
+    svg += `<text x="${margin.left + 8}" y="${y(144) + 19}" class="da-chart-note">${t.target}</text>`;
 
     // Day separators and clock ticks.
     const step = state.day ? 180 : 720;
@@ -364,7 +470,7 @@ const picks = featured.map((item: any) => {
       svg += `<line x1="${x(m)}" x2="${x(m)}" y1="4" y2="${axisTop}" stroke="var(--color-line-2)" stroke-width="${isDay ? 1 : 0.5}" ${isDay ? "" : 'stroke-dasharray="2 5"'}/>`;
       if (m === x1) continue;
       if (state.day || !compact || isDay) {
-        const label = state.day ? clock(m) : isDay ? `Day ${dayOf(m)}` : clock(m);
+        const label = state.day ? clock(m) : isDay ? dayLabel(dayOf(m)) : clock(m);
         const skip = compact && state.day && (m - x0) % 360 !== 0;
         if (!skip) svg += `<text x="${x(m) + 3}" y="${axisTop + 18}" class="da-axis">${label}</text>`;
       }
@@ -372,14 +478,14 @@ const picks = featured.map((item: any) => {
 
     // Glucose.
     if (!agent) {
-      svg += `<path d="${line(run.cgm, 5)}" fill="none" stroke="var(--color-ink-4)" stroke-width="1.2"/>`;
-      svg += `<path d="${line(run.truth, 0)}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linejoin="round"/>`;
+      svg += `<path d="${line(run.cgm, 5)}" fill="none" stroke="var(--color-ink-4)" stroke-width="0.9"/>`;
+      svg += `<path d="${line(run.truth, 0)}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round"/>`;
     } else {
-      svg += `<path d="${line(primary as (number | null)[], 5)}" fill="none" stroke="var(--color-ink)" stroke-width="2" stroke-linejoin="round"/>`;
+      svg += `<path d="${line(primary as (number | null)[], 5)}" fill="none" stroke="var(--color-ink)" stroke-width="1.4" stroke-linejoin="round"/>`;
     }
 
     // Hidden events.
-    svg += `<text x="${margin.left}" y="${laneTop - 7}" class="da-lane-label">${agent ? "Meals, exercise and faults: hidden from the agent" : "Hidden events"}</text>`;
+    svg += `<text x="${margin.left}" y="${laneTop - 7}" class="da-lane-label">${agent ? t.hiddenFromAgent : t.hiddenEvents}</text>`;
     svg += `<rect x="${margin.left}" y="${laneTop}" width="${width - margin.left - margin.right}" height="${laneHeight}" fill="var(--color-paper-2)"/>`;
     if (!agent) {
       for (const [m, end, type, grams] of task.events) {
@@ -388,17 +494,17 @@ const picks = featured.map((item: any) => {
         if (end != null) {
           const a = x(Math.max(m, x0));
           const b = x(Math.min(end, x1));
-          svg += `<rect x="${a}" y="${laneTop + 5}" width="${Math.max(2, b - a)}" height="${laneHeight - 10}" fill="${style.color}" opacity="0.8"><title>${style.label}, Day ${dayOf(m)} ${clock(m)}–${clock(end)}</title></rect>`;
+          svg += `<rect x="${a}" y="${laneTop + 5}" width="${Math.max(2, b - a)}" height="${laneHeight - 10}" fill="${style.color}" opacity="0.8"><title>${style.label}${t.comma}${dayLabel(dayOf(m))} ${clock(m)}–${clock(end)}</title></rect>`;
         } else {
           const px = x(m);
-          svg += `<path d="M${px - 5} ${laneTop + 5}h10l-5 ${laneHeight - 10}z" fill="${style.color}"><title>${style.label}${grams ? ` ${Math.round(grams)} g` : ""}, Day ${dayOf(m)} ${clock(m)}</title></path>`;
+          svg += `<path d="M${px - 5} ${laneTop + 5}h10l-5 ${laneHeight - 10}z" fill="${style.color}"><title>${style.label}${grams ? ` ${Math.round(grams)} g` : ""}${t.comma}${dayLabel(dayOf(m))} ${clock(m)}</title></path>`;
         }
       }
     }
 
     // Basal relative to schedule.
     const by = (pct: number) => basalTop + basalHeight - (Math.min(pct, 200) / 200) * basalHeight;
-    svg += `<text x="${margin.left}" y="${basalTop - 7}" class="da-lane-label">Basal insulin, % of schedule</text>`;
+    svg += `<text x="${margin.left}" y="${basalTop - 7}" class="da-lane-label">${t.basal}</text>`;
     svg += `<line x1="${margin.left}" x2="${width - margin.right}" y1="${by(100)}" y2="${by(100)}" stroke="var(--color-line-2)" stroke-dasharray="3 4"/>`;
     let basalPath = "";
     run.basal.forEach(([m, pct], i) => {
@@ -408,17 +514,17 @@ const picks = featured.map((item: any) => {
       const b = x(Math.min(next, x1, limit));
       basalPath += `${basalPath ? "L" : "M"}${a.toFixed(1)} ${by(pct).toFixed(1)}L${b.toFixed(1)} ${by(pct).toFixed(1)}`;
     });
-    svg += `<path d="${basalPath}" fill="none" stroke="var(--color-ink-2)" stroke-width="1.6"/>`;
+    svg += `<path d="${basalPath}" fill="none" stroke="var(--color-ink-2)" stroke-width="1.1"/>`;
 
     // Actions, with a guide for the selected one.
-    svg += `<text x="${margin.left}" y="${actTop - 11}" class="da-lane-label">Actions</text>`;
+    svg += `<text x="${margin.left}" y="${actTop - 11}" class="da-lane-label">${t.actions}</text>`;
     svg += `<line x1="${margin.left}" x2="${width - margin.right}" y1="${actTop + 4}" y2="${actTop + 4}" stroke="var(--color-line-2)"/>`;
     run.acts.forEach(([m, kind], i) => {
       if (!inRange(m) || m > limit) return;
       const px = x(m);
       const on = i === state.selected;
-      if (on) svg += `<line x1="${px}" x2="${px}" y1="4" y2="${actTop + 4}" stroke="var(--color-ink)" stroke-width="1.4"/>`;
-      svg += `<circle cx="${px}" cy="${actTop + 4}" r="${on ? 7 : 4.5}" fill="${actionColor(kind)}" stroke="var(--color-paper)" stroke-width="1.5"/>`;
+      if (on) svg += `<line x1="${px}" x2="${px}" y1="4" y2="${actTop + 4}" stroke="var(--color-ink)" stroke-width="1"/>`;
+      svg += `<circle cx="${px}" cy="${actTop + 4}" r="${on ? 5 : 3}" fill="${actionColor(kind)}" stroke="var(--color-paper)" stroke-width="1.5"/>`;
       svg += `<circle cx="${px}" cy="${actTop + 4}" r="11" fill="transparent" data-act="${i}" style="cursor:pointer"><title>${clock(m)} ${escapeHtml(actionLabel(kind, run.acts[i][2]))}</title></circle>`;
     });
     if (state.cursor != null) {
@@ -433,14 +539,14 @@ const picks = featured.map((item: any) => {
     cancelAnimationFrame(replay);
     replay = 0;
     state.cursor = null;
-    $("da-play").textContent = "Replay";
+    $("da-play").textContent = t.replay;
   }
   function startReplay() {
     const x0 = state.day ? (state.day - 1) * 1440 : 0;
     const x1 = state.day ? state.day * 1440 : HORIZON;
     const seconds = state.day ? 14 : 24;
     const began = performance.now();
-    $("da-play").textContent = "Stop";
+    $("da-play").textContent = t.stop;
     const tick = (now: number) => {
       const t = Math.min(1, (now - began) / (seconds * 1000));
       state.cursor = x0 + (x1 - x0) * t;

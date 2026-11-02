@@ -1,15 +1,43 @@
 ---
 import Container from "@/components/container.astro";
+import { pageOf, pagePath, type Lang } from "@/lib/i18n";
 import { projectPath } from "@/lib/project-paths";
+
+const lang = Astro.currentLocale as Lang;
+const other: Lang = lang === "zh" ? "en" : "zh";
+const copy = {
+  zh: { homepage: "主页", homepageLabel: "THU CST SAST 主页", switchLabel: "Switch to English", switchText: "EN", switchLang: "en" },
+  en: { homepage: "Homepage", homepageLabel: "THU CST SAST Homepage", switchLabel: "切换到中文", switchText: "中文", switchLang: "zh-CN" },
+}[lang];
 ---
 <header class="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur-md">
   <Container>
-    <a href="https://net9.org/" class="flex w-full justify-between items-center gap-4 py-4 group" aria-label="THU CST SAST Homepage">
-      <span class="flex items-center gap-2">
-        <img src={projectPath('/brand/sast.png')} width="32" height="32" alt="SAST" class="shrink-0 object-contain" />
-        <span class="font-serif font-bold text-ink text-xl">THU CST SAST</span>
-      </span>
-      <span class="text-sm text-ink-2 group-hover:underline underline-offset-4">Homepage ↗</span>
-    </a>
+    <div class="flex items-center gap-4 py-4">
+      <a href="https://net9.org/" class="flex flex-1 min-w-0 justify-between items-center gap-4 group" aria-label={copy.homepageLabel}>
+        <span class="flex items-center gap-2">
+          <img src={projectPath('/brand/sast.png')} width="32" height="32" alt="SAST" class="shrink-0 object-contain" />
+          <span class="font-serif font-semibold text-ink text-lg">THU CST SAST</span>
+        </span>
+        <span class="shrink-0 text-[0.95rem] text-ink-2 group-hover:underline underline-offset-4">{copy.homepage} ↗</span>
+      </a>
+      <a
+        data-lang-switch
+        href={pagePath(other, pageOf(Astro.url.pathname))}
+        hreflang={copy.switchLang}
+        lang={copy.switchLang}
+        aria-label={copy.switchLabel}
+        title={copy.switchLabel}
+        class="shrink-0 border border-ink/15 bg-paper-white px-2.5 py-1 text-[0.95rem] font-medium text-ink hover:bg-paper-2 transition">
+        {copy.switchText}
+      </a>
+    </div>
   </Container>
 </header>
+
+<script>
+  // Stay on the open run or section when switching language.
+  document.querySelector<HTMLAnchorElement>("[data-lang-switch]")?.addEventListener("click", (event) => {
+    const link = event.currentTarget as HTMLAnchorElement;
+    link.href = link.pathname + location.search + location.hash;
+  });
+</script>

@@ -1,11 +1,14 @@
 ---
 /** A task's hidden 72-hour calendar: durations as bars, meals as ticks. */
-import { EVENT_STYLES } from "@/lib/diabagent.js";
+import { contentFor } from "@/lib/diabagent.js";
+import type { Lang } from "@/lib/i18n";
 
 interface Props {
   events: [number, number | null, string, number | null][];
 }
 const { events } = Astro.props;
+const lang = Astro.currentLocale as Lang;
+const { EVENT_STYLES } = contentFor(lang);
 
 const HOURS = 72;
 const WIDTH = HOURS * 60;
@@ -13,7 +16,7 @@ const spans = events.filter(([, end]) => end != null);
 const points = events.filter(([, end]) => end == null);
 ---
 
-<svg class="da-lane" viewBox={`0 0 ${WIDTH} 24`} preserveAspectRatio="none" role="img" aria-label="Hidden event calendar over 72 hours">
+<svg class="da-lane" viewBox={`0 0 ${WIDTH} 24`} preserveAspectRatio="none" role="img" aria-label={lang === "zh" ? "72 小时的隐藏事件日历" : "Hidden event calendar over 72 hours"}>
   <rect x="0" y="0" width={WIDTH} height="24" fill="var(--color-paper-2)"></rect>
   {[1440, 2880].map((x) => <rect x={x - 4} y="0" width="8" height="24" fill="var(--color-paper)" />)}
   {

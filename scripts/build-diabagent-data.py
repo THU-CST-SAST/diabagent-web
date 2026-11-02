@@ -39,19 +39,19 @@ MODEL_IDS = [m["id"] for m in MODELS]
 
 # Paper table: 15-minute baselines; agent decisions remain hourly.
 BASELINES = [
-    dict(name="Simulated oref1 (15 min)", score=71.19, tir=51.62, hypo=96.45, gv=77.48),
-    dict(name="Guideline rules (15 min)", score=63.57, tir=38.35, hypo=95.04, gv=74.21),
-    dict(name="Standard care (15 min)", score=61.16, tir=33.82, hypo=94.54, gv=74.42),
+    dict(name="OpenAPS (15 min)", score=71.19, tir=51.62, hypo=96.45, gv=77.48),
+    dict(name="BB+Rules (15 min)", score=63.57, tir=38.35, hypo=95.04, gv=74.21),
+    dict(name="BB (15 min)", score=61.16, tir=33.82, hypo=94.54, gv=74.42),
 ]
 
 GROUPS = [
     dict(id="A", name="Meal timing and absorption", line="Meals that arrive late, overlap, or never arrive after the dose."),
-    dict(id="B", name="Insulin from earlier doses", line="Earlier doses still acting when the next decision is due."),
-    dict(id="C", name="Exercise", line="Activity quietly pulls glucose down while the agent sees only the fall."),
-    dict(id="D", name="Changing insulin needs", line="Stress, sleep loss and dawn change what a unit of insulin does."),
-    dict(id="E", name="Pump under-delivery", line="The pump reports a dose that never fully reaches the body."),
-    dict(id="F", name="Sensor errors", line="The reading itself drifts, gaps or lies."),
-    dict(id="H", name="Illness and recovery", line="Insulin needs and appetite recover on different clocks."),
+    dict(id="B", name="Insulin from earlier doses", line="Earlier doses are still acting at the next decision."),
+    dict(id="C", name="Exercise", line="Activity lowers glucose, and the agent sees only the fall."),
+    dict(id="D", name="Changing insulin needs", line="Stress, sleep loss and the dawn phenomenon change how much insulin is needed."),
+    dict(id="E", name="Pump under-delivery", line="The pump records a dose that does not fully reach the body."),
+    dict(id="F", name="Sensor errors", line="Sensor readings drift, drop out or read wrong."),
+    dict(id="H", name="Illness and recovery", line="Insulin needs and appetite recover at different times."),
 ]
 
 # Paper appendix: every template and its event combination.

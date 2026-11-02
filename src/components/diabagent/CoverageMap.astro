@@ -1,32 +1,47 @@
 ---
 /** Which person meets which scenario: one cell per task, each opening its run. */
-import { projectPath } from "@/lib/project-paths";
-import { groupScores, templates } from "@/lib/diabagent.js";
+import { contentFor } from "@/lib/diabagent.js";
+import { pagePath, type Lang } from "@/lib/i18n";
 
-const GROUP_COLORS: Record<string, string> = {
-  A: "#c98a3a",
-  B: "#8e6fa8",
-  C: "#c2673c",
-  D: "#5e7fa8",
-  E: "#b4483c",
-  F: "#4f8a8b",
-  H: "#7d8a5a",
+const lang = Astro.currentLocale as Lang;
+const { groupScores, templates } = contentFor(lang);
+
+const people = {
+  zh: [
+    ["child-male", "男孩，9 岁"],
+    ["child-female", "女孩，9 岁"],
+    ["adolescent-male", "青少年男性，15 岁"],
+    ["adolescent-female", "青少年女性，15 岁"],
+    ["adult-male", "成年男性，39 岁"],
+    ["adult-female", "成年女性，39 岁"],
+    ["older-male", "老年男性，70 岁"],
+    ["older-female", "老年女性，70 岁"],
+  ],
+  en: [
+    ["child-male", "Boy, 9"],
+    ["child-female", "Girl, 9"],
+    ["adolescent-male", "Teen boy, 15"],
+    ["adolescent-female", "Teen girl, 15"],
+    ["adult-male", "Man, 39"],
+    ["adult-female", "Woman, 39"],
+    ["older-male", "Older man, 70"],
+    ["older-female", "Older woman, 70"],
+  ],
+}[lang];
+const [comma, colon] = lang === "zh" ? ["，", "："] : [", ", ": "];
+
+const groupColors: Record<string, string> = {
+  A: "#9b7b3d",
+  B: "#6d4a7d",
+  C: "#a8432a",
+  D: "#1f3f5f",
+  E: "#985b6c",
+  F: "#2f6f6b",
+  H: "#6a6f33",
 };
-
-const people = [
-  ["child-male", "Boy, 9"],
-  ["child-female", "Girl, 9"],
-  ["adolescent-male", "Teen boy, 15"],
-  ["adolescent-female", "Teen girl, 15"],
-  ["adult-male", "Man, 39"],
-  ["adult-female", "Woman, 39"],
-  ["older-male", "Older man, 70"],
-  ["older-female", "Older woman, 70"],
-];
-
 const groups = groupScores.map((group: any) => ({
   ...group,
-  color: GROUP_COLORS[group.id],
+  color: groupColors[group.id],
   templates: templates.filter((template: any) => template.group === group.id),
 }));
 
@@ -39,12 +54,12 @@ const instanceOf = (template: any, person: string) =>
 ---
 
 <div class="da-map-scroll">
-  <div class="da-map" style={`grid-template-columns: 8.4rem ${columns}`}>
+  <div class="da-map" style={`grid-template-columns: 10rem ${columns}`}>
     <span></span>
     {
       groups.flatMap((group: any, index: number) => [
         ...(index ? [<span />] : []),
-        <span class="da-map-group" style={`grid-column: span ${group.templates.length}; --group:${group.color}`} title={group.name}>{group.id}</span>,
+        <span class="da-map-group" style={`grid-column: span ${group.templates.length}; --group: ${group.color}`} title={group.name}>{group.id}</span>,
       ])
     }
     {
@@ -57,10 +72,10 @@ const instanceOf = (template: any, person: string) =>
             return instance ? (
               <a
                 class="da-map-cell"
-                style={`--group:${group.color}`}
-                href={projectPath(`/diabagent/runs/?task=${instance.key}&model=${instance.best}`)}
-                title={`${template.id} · ${instance.label}: ${template.title}`}
-                aria-label={`${template.id}, ${instance.label}: ${template.title}`}
+                style={`--group: ${group.color}`}
+                href={pagePath(lang, `/diabagent/runs/?task=${instance.key}&model=${instance.best}`)}
+                title={`${template.id} · ${instance.label}${colon}${template.title}`}
+                aria-label={`${template.id}${comma}${instance.label}${colon}${template.title}`}
               />
             ) : (
               <span class="da-map-empty" />
@@ -72,5 +87,5 @@ const instanceOf = (template: any, person: string) =>
   </div>
 </div>
 <ul class="da-legend da-map-legend">
-  {groups.map((group: any) => <li><i style={`background:${group.color}`} /><strong>{group.id}</strong>{group.name}</li>)}
+  {groups.map((group: any) => <li style={`--group: ${group.color}`}><strong>{group.id}</strong>{group.name}</li>)}
 </ul>

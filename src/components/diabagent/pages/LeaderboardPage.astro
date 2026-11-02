@@ -1,0 +1,252 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Caption from "@/components/diabagent/Caption.astro";
+import ScoreBars from "@/components/diabagent/ScoreBars.astro";
+import SubNav from "@/components/diabagent/SubNav.astro";
+import { contentFor, models, score, score1 } from "@/lib/diabagent.js";
+import { pagePath, type Lang } from "@/lib/i18n";
+import "@/styles/pptbench.css";
+import "@/styles/diabagent.css";
+
+const lang = Astro.currentLocale as Lang;
+const { baselines, cohorts, groupScores } = contentFor(lang);
+
+const copy = {
+  zh: {
+    title: "DiabAgent 排行榜",
+    description: "五个模型和三个 15 分钟基线在 SweetBench 212 个任务上的 COGI 得分。",
+    heading: "排行榜",
+    intro: "五个模型和三个基线运行同样的 212 个任务。BB 为基础–餐时给药，BB+Rules 为加入预定义事件响应规则的基础–餐时给药，OpenAPS 使用开源给药核心计算临时基础率和微量大剂量。智能体每小时决策一次，基线每 15 分钟一次，均使用相同的可见观测和设备接口；两者每个本地自然日都可再增加至多六次事件触发的决策。主实验不另加后台 HCL 控制器。分数越高越好。",
+    parts: [
+      { weight: "50%", name: "目标范围内时间", body: "真实血糖处于 4–8 mmol/L 的时间占比。" },
+      { weight: "35%", name: "低血糖", body: "低于 70 mg/dL 的时间达到 15% 时降为零分。" },
+      { weight: "15%", name: "波动", body: "标准差达到 108 mg/dL 时降为零分。" },
+    ],
+    scoringTitle: "COGI 如何计分",
+    scoringLede: "所有得分都根据每五分钟一次的真实血糖计算。",
+    allTitle: "所有控制器",
+    controller: "控制器",
+    timeInRange: "目标范围内时间",
+    hypo: "低血糖",
+    variability: "波动",
+    everyTitle: "得分分布",
+    everyLede: (wins: number) => `每个点代表一个任务，竖线为均值。Claude Opus 5.5 在 212 个任务中的 ${wins} 个上得分最高。`,
+    stripLabel: "各模型的任务得分分布",
+    barsCaption: "212 个任务的平均 COGI。空心点为基线，横轴从 50 开始。",
+    stripCaption: "各模型在每个任务上的 COGI。",
+    scenarioTitle: "按场景",
+    scenarioLede: "泵输注不足是所有模型得分最低的分组：传感器能显示血糖升高，却显示不出原因。",
+    scenarioGroup: "场景分组",
+    personTitle: "按个体",
+    person: "虚拟个体",
+    back: "← 返回 DiabAgent",
+  },
+  en: {
+    title: "DiabAgent leaderboard",
+    description: "COGI scores for five models and three 15-minute baselines on the 212 tasks of SweetBench.",
+    heading: "Leaderboard",
+    intro: "Five models and three baselines run the same 212 tasks. BB is Basal–Bolus; BB+Rules adds predefined event-response rules to BB; OpenAPS uses its open-source dosing core to compute temporary basal adjustments and micro-boluses. Agents decide hourly and baselines every 15 minutes, using the same visible observations and device interface; both can add up to six event-triggered decisions per local day. The main evaluation adds no separate background HCL controller. Higher is better.",
+    parts: [
+      { weight: "50%", name: "Time in range", body: "Share of time with true glucose in 4–8 mmol/L." },
+      { weight: "35%", name: "Hypoglycemia", body: "Reaches zero when 15% of time is below 70 mg/dL." },
+      { weight: "15%", name: "Variability", body: "Reaches zero at a standard deviation of 108 mg/dL." },
+    ],
+    scoringTitle: "How COGI is scored",
+    scoringLede: "All scores are computed from true glucose, sampled every five minutes.",
+    allTitle: "All controllers",
+    controller: "Controller",
+    timeInRange: "Time in range",
+    hypo: "Hypoglycemia",
+    variability: "Variability",
+    everyTitle: "Score distribution",
+    everyLede: (wins: number) => `Each point is one task and each vertical line is a mean. Claude Opus 5.5 has the highest score on ${wins} of 212 tasks.`,
+    stripLabel: "Distribution of task scores for each model",
+    barsCaption: "Mean COGI over 212 tasks. Open points are baselines; the axis starts at 50.",
+    stripCaption: "COGI on each task, by model.",
+    scenarioTitle: "By scenario",
+    scenarioLede: "Pump under-delivery is the lowest-scoring group for every model: the sensor shows the rise but not its cause.",
+    scenarioGroup: "Scenario group",
+    personTitle: "By person",
+    person: "Virtual person",
+    back: "← Back to DiabAgent",
+  },
+}[lang];
+
+const rows = [
+  ...models.map((m: any) => ({ ...m, kind: "model" })),
+  ...baselines.map((b: any) => ({ ...b, color: "var(--color-ink-4)", kind: "baseline" })),
+].sort((a, b) => b.score - a.score);
+
+// Each task is one dot; the strip shows how far a mean hides the spread.
+const strip = { width: 900, row: 54, left: 170, right: 24, min: 30, max: 100 };
+const stripX = (value: number) =>
+  strip.left + ((value - strip.min) / (strip.max - strip.min)) * (strip.width - strip.left - strip.right);
+const stripHeight = models.length * strip.row + 34;
+
+// Stable vertical jitter, so a rebuild does not reshuffle the dots.
+const jitter = (i: number) => (((i * 37) % 21) - 10) * 1.3;
+
+const shade = (value: number) => {
+  const t = Math.max(0, Math.min(1, (value - 45) / 40));
+  return `background:color-mix(in srgb, #1f3f5f ${Math.round(t * 34)}%, var(--color-paper))`;
+};
+const bestOf = (scores: Record<string, number>) => Math.max(...Object.values(scores));
+---
+
+<Layout title={copy.title} description={copy.description}>
+  <article class="pptbench-page diabagent-page max-w-5xl mx-auto px-5 sm:px-8">
+    <SubNav active="leaderboard" />
+    <header class="pptbench-hero pt-12 md:pt-16">
+      <h1 class="da-page-title font-serif font-bold tracking-tight text-ink">{copy.heading}</h1>
+      <p class="pptbench-subtitle mt-5">{copy.intro}</p>
+    </header>
+
+    <section class="da-section mt-10">
+      <figure>
+        <ScoreBars />
+        <Caption n={1}>{copy.barsCaption}</Caption>
+      </figure>
+    </section>
+
+    <section class="da-section mt-16">
+      <h2>{copy.scoringTitle}</h2>
+      <p class="da-lede mt-4">{copy.scoringLede}</p>
+      <ul class="da-formula mt-6">
+        {
+          copy.parts.map((part) => (
+            <li>
+              <strong>{part.weight}</strong>
+              <h3>{part.name}</h3>
+              <p>{part.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="da-section mt-16">
+      <h2>{copy.allTitle}</h2>
+      <div class="da-table-wrap mt-6">
+        <table class="da-table">
+          <thead>
+            <tr>
+              <th scope="col">{copy.controller}</th>
+              <th scope="col" class="num">COGI</th>
+              <th scope="col" class="num">{copy.timeInRange}</th>
+              <th scope="col" class="num">{copy.hypo}</th>
+              <th scope="col" class="num">{copy.variability}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              rows.map((row: any) => (
+                <tr class:list={[row.kind === "baseline" && "is-baseline"]}>
+                  <th scope="row"><i class="da-dot" style={`background:${row.color}`} />{row.name}</th>
+                  <td class="num is-score">{score(row.score)}</td>
+                  <td class="num">{score(row.tir)}</td>
+                  <td class="num">{score(row.hypo)}</td>
+                  <td class="num">{score(row.gv)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="da-section mt-16">
+      <h2>{copy.everyTitle}</h2>
+      <p class="da-lede mt-4">{copy.everyLede(models[0].wins)}</p>
+      <figure class="mt-6">
+      <div class="da-scroll">
+        <svg class="da-strip" viewBox={`0 0 ${strip.width} ${stripHeight}`} role="img" aria-label={copy.stripLabel}>
+          {[40, 50, 60, 70, 80, 90, 100].map((v) => (
+            <g>
+              <line x1={stripX(v)} x2={stripX(v)} y1="0" y2={stripHeight - 30} class="da-grid" />
+              <text x={stripX(v)} y={stripHeight - 8} text-anchor="middle" class="da-axis">{v}</text>
+            </g>
+          ))}
+          <line x1={stripX(strip.min)} x2={strip.width - strip.right} y1={stripHeight - 30} y2={stripHeight - 30} class="da-axis-line" />
+          <text x="0" y={stripHeight - 8} class="da-axis-title">COGI</text>
+          {models.map((model: any, row: number) => {
+            const y = row * strip.row + strip.row / 2;
+            return (
+              <g>
+                <text x="0" y={y + 5} class="da-strip-name">{model.name}</text>
+                {model.scores.map((value: number, i: number) => (
+                  <circle cx={stripX(value)} cy={y + jitter(i)} r="2.8" fill={model.color} fill-opacity="0.45" />
+                ))}
+                <rect x={stripX(model.score) - 1} y={y - 20} width="2" height="40" fill="var(--color-ink)" />
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      <Caption n={2}>{copy.stripCaption}</Caption>
+      </figure>
+    </section>
+
+    <section class="da-section mt-16">
+      <h2>{copy.scenarioTitle}</h2>
+      <p class="da-lede mt-4">{copy.scenarioLede}</p>
+      <div class="da-table-wrap mt-6">
+        <table class="da-table da-heat">
+          <thead>
+            <tr>
+              <th scope="col">{copy.scenarioGroup}</th>
+              {models.map((m: any) => <th scope="col" class="num">{m.name}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {
+              groupScores.map((group: any) => (
+                <tr>
+                  <th scope="row"><a href={pagePath(lang, `/diabagent/tasks/#group-${group.id}`)}>{group.name}</a></th>
+                  {models.map((m: any) => (
+                    <td class:list={["num", group.scores[m.id] === bestOf(group.scores) && "is-best"]} style={shade(group.scores[m.id])}>
+                      {score1(group.scores[m.id])}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="da-section mt-16">
+      <h2>{copy.personTitle}</h2>
+      <div class="da-table-wrap mt-6">
+        <table class="da-table da-heat">
+          <thead>
+            <tr>
+              <th scope="col">{copy.person}</th>
+              {models.map((m: any) => <th scope="col" class="num">{m.name}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {
+              cohorts.map((cohort: any) => (
+                <tr>
+                  <th scope="row">{cohort.name}</th>
+                  {models.map((m: any) => (
+                    <td class:list={["num", cohort.scores[m.id] === bestOf(cohort.scores) && "is-best"]} style={shade(cohort.scores[m.id])}>
+                      {score1(cohort.scores[m.id])}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="mt-16 mb-24 border-t border-line pt-6">
+      <a href={pagePath(lang, "/diabagent/")} class="inline-flex items-center gap-1 text-[0.95rem] text-accent hover:text-accent-hover transition">
+        {copy.back}
+      </a>
+    </div>
+  </article>
+</Layout>

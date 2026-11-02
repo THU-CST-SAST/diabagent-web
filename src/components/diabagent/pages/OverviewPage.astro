@@ -1,0 +1,348 @@
+---
+/**
+ * DiabAgent overview, in four modules: abstract, APC, the simulator and the
+ * benchmark, and key findings.
+ */
+import Layout from "@/layouts/Layout.astro";
+import Link from "@/components/ui/link.astro";
+import ApcSteps from "@/components/diabagent/ApcSteps.astro";
+import Caption from "@/components/diabagent/Caption.astro";
+import CoverageMap from "@/components/diabagent/CoverageMap.astro";
+import ScoreBars from "@/components/diabagent/ScoreBars.astro";
+import Spark from "@/components/diabagent/Spark.astro";
+import SubNav from "@/components/diabagent/SubNav.astro";
+import { FACTS, contentFor, findTask, loadRun, modelById, models, score, score1 } from "@/lib/diabagent.js";
+import { pagePath, type Lang } from "@/lib/i18n";
+import "@/styles/pptbench.css";
+import "@/styles/diabagent.css";
+
+const lang = Astro.currentLocale as Lang;
+const { META, TITLE, baselines, contextStudy, deviceStudy, featured, heroLinks, simDimensions, weekLearning } = contentFor(lang);
+const trajectories = FACTS.trajectories.toLocaleString("en-US");
+const lead = score(models[0].score);
+const strongestBaseline = score(baselines[0].score);
+
+const copy = {
+  zh: {
+    description: `DiabAgent 通过医疗设备工具调控 1 型糖尿病的血糖。SweetBench 依据真实血糖轨迹，在 ${FACTS.tasks} 个任务上评测五个模型。`,
+    titleRest: "迈向智能体生理控制",
+    abstract: "现实中的治疗由一系列动作组成，这些动作对患者的影响会在数小时乃至数天内逐步显现。在智能体生理控制（APC）中，智能体通过医疗设备工具执行治疗动作、调控生理系统，并依据由此产生的生理变化轨迹评分。DiabAgent 是它的第一个实例，它面向 1 型糖尿病的血糖控制，它提供了一套可配置的仿真环境 DiabetSim 和评测基准 SweetBench，为智能体生理控制的开发与评估提供可复现的实验基础。",
+    soon: "即将发布",
+    soonLabel: (label: string) => `${label}即将发布`,
+    apcTitle: "APC：把治疗视为控制问题",
+    apcLede: "控制器是智能体，传感器和执行器是医疗设备。决策与设备操作相互分离，同一个智能体可以跨设备、跨场景、跨个体工作。",
+    simTitle: "DiabetSim：可配置的仿真器",
+    simLede: "DiabetSim 支持配置虚拟个体、医疗设备、生活事件和信息条件：虚拟个体决定生理特征与胰岛素反应，医疗设备决定可用的监测与治疗手段，生活事件描述进餐、运动和疾病等扰动，信息条件决定哪些事件与观测会提供给智能体。",
+    coverage: "场景覆盖",
+    coverageLede: "每个彩色方格是一个任务，同类场景使用同一种颜色，点击可查看其轨迹。",
+    benchTitle: "SweetBench：依据真实血糖评分",
+    benchLede: `${FACTS.tasks} 个任务各持续 ${FACTS.hours} 小时，进餐和活动都不报告。COGI 综合目标范围内时间、低血糖和血糖波动。Claude Opus 5.5 得分最高，为 ${lead}；最强基线是每 15 分钟决策一次的 OpenAPS，为 ${strongestBaseline}。`,
+    benchPages: [
+      { title: "排行榜", href: "/diabagent/leaderboard/", line: "所有控制器，按场景和个体比较。" },
+      { title: "任务", href: "/diabagent/tasks/", line: `${FACTS.tasks} 个任务及其隐藏事件日历。` },
+      { title: "轨迹", href: "/diabagent/runs/", line: `${trajectories} 条轨迹，以及每个动作的理由。` },
+    ],
+    worthReading: "精选轨迹",
+    sparkLabel: (template: string) => `${template} 真实血糖`,
+    findings: "主要发现",
+    weekTitle: "带日终复盘的个人记录把逐日得分提到 80 分以上",
+    weekBody: "记录与日终复盘生成的计划使逐日得分从前三天的约 73 分升到后四天的 80 分以上。整周 COGI 从每日清空记录的 71.1 提高到仅跨日记录的 74.4，再到加入复盘计划的 78.7；加入执行反馈后为 79.0。各条件每天重置对话，生理状态连续，模型权重保持不变。",
+    weekLabel: "四种记录与复盘条件下七天的逐日 COGI",
+    contextTitle: "情境信息比决策频率更重要",
+    contextBody: "有发生事件的文字报告时，输注部位渗漏场景在各决策间隔下得分都不低于 97.8。没有这些报告，把决策频率提高到八倍也无法弥补差距。",
+    contextLabel: "不同信息条件和决策间隔下的 COGI",
+    contextHead: "可用信息",
+    deviceTitle: "同一个智能体用胰岛素泵比用胰岛素笔得分更高",
+    deviceBody: "泵对应更灵活的频率和动作空间，例如使用需求下降时，泵可以调低临时基础率，而胰岛素笔已注射的长效胰岛素会继续起效。在三个案例中，DASH 关闭闭环时比笔高约 6–8 分；开启后台闭环后，前两个案例再提高 4.63 和 2.53 分，第三个接近，智能体决策频率不变。",
+    devices: ["胰岛素笔", "DASH（关闭闭环）", "DASH（开启闭环）"],
+    dayAxis: "天数",
+    captions: {
+      apc: "APC 回路。选择步骤可高亮对应路径。",
+      coverage: "行为虚拟个体，列为场景模板。",
+      bars: `${FACTS.tasks} 个任务的平均 COGI。空心点为最强基线，横轴从 50 开始。`,
+      week: "六个患者–场景配置的逐日平均 COGI。",
+      context: "不同信息条件和决策间隔下的 COGI。每格为一条 72 小时轨迹。",
+      device: "不同给药设备下的 COGI。每个数值为一条 72 小时轨迹。",
+    },
+    homepage: "← SAST 主页",
+  },
+  en: {
+    description: `DiabAgent controls glucose in type 1 diabetes through medical-device tools. SweetBench evaluates five models on ${FACTS.tasks} tasks using the true glucose trajectory.`,
+    titleRest: "Toward Agentic Physiological Control",
+    abstract: "Treatment consists of a sequence of actions whose effects on the patient unfold over hours or days. In Agentic Physiological Control (APC), an agent performs treatment actions through medical-device tools to control a physiological system and is scored on the resulting physiological trajectory. DiabAgent is its first instance, targeting glucose control in type 1 diabetes. It provides the configurable DiabetSim simulation environment and the SweetBench benchmark, establishing a reproducible experimental foundation for developing and evaluating agentic physiological control.",
+    soon: "soon",
+    soonLabel: (label: string) => `${label} coming soon`,
+    apcTitle: "APC: treatment as a control problem",
+    apcLede: "The controller is an agent, and the sensors and actuators are medical devices. Separating decisions from device operation lets one agent work across devices, scenarios and people.",
+    simTitle: "DiabetSim: a configurable simulator",
+    simLede: "DiabetSim supports configurable virtual people, medical devices, daily-life events and information conditions. Virtual people specify physiological characteristics and insulin responses; medical devices determine the available monitoring and treatment options; daily-life events describe disturbances such as meals, exercise and illness; and information conditions determine which events and observations reach the agent.",
+    coverage: "Scenario coverage",
+    coverageLede: "Each colored cell is one task; scenarios in the same group share a color. Select a cell to open its run.",
+    benchTitle: "SweetBench: scored on true glucose",
+    benchLede: `Each of the ${FACTS.tasks} tasks lasts ${FACTS.hours} hours, and meals and activity are never reported. COGI combines time in range, hypoglycemia and glucose variability. Claude Opus 5.5 scores highest at ${lead}; the strongest baseline, OpenAPS deciding every 15 minutes, scores ${strongestBaseline}.`,
+    benchPages: [
+      { title: "Leaderboard", href: "/diabagent/leaderboard/", line: "All controllers, by scenario and by person." },
+      { title: "Tasks", href: "/diabagent/tasks/", line: `${FACTS.tasks} tasks and their hidden event calendars.` },
+      { title: "Runs", href: "/diabagent/runs/", line: `${trajectories} trajectories, with the reason for every action.` },
+    ],
+    worthReading: "Selected runs",
+    sparkLabel: (template: string) => `${template} true glucose`,
+    findings: "Key findings",
+    weekTitle: "A personal record with an end-of-day review lifts daily scores above 80",
+    weekBody: "Records and plans generated by end-of-day review lift daily scores from about 73 in the first three days to above 80 in the last four. Whole-week COGI rises from 71.1 with daily record reset to 74.4 with cross-day records only and 78.7 with a review-generated plan; adding execution feedback yields 79.0. All conditions reset the conversation daily while maintaining continuous physiology and fixed model weights.",
+    weekLabel: "Daily COGI over seven days for four record and review conditions",
+    contextTitle: "Context matters more than decision frequency",
+    contextBody: "With free-text reports of events, the infusion-site leakage scenario scores at least 97.8 at every decision interval. Without these reports, increasing decision frequency eightfold does not close the gap.",
+    contextLabel: "COGI by information condition and decision interval",
+    contextHead: "Information available",
+    deviceTitle: "The same agent scores higher with a pump than with pens",
+    deviceBody: "Pumps allow more flexible delivery frequency and actions: a temporary basal rate can be lowered as insulin needs fall, while long-acting insulin already injected with a pen keeps acting. Across these three cases, DASH with CL off scores about 6–8 points above pens. Turning the background loop on adds 4.63 and 2.53 points in the first two cases and gives a similar score in the third, without changing the agent's decision frequency.",
+    devices: ["Pens", "DASH-w/o CL", "DASH-w/ CL"],
+    dayAxis: "Day",
+    captions: {
+      apc: "The APC loop. Select a step to highlight its path.",
+      coverage: "Rows are virtual people; columns are scenario templates.",
+      bars: `Mean COGI over ${FACTS.tasks} tasks. The open point is the strongest baseline; the axis starts at 50.`,
+      week: "Mean daily COGI over six patient-scenario configurations.",
+      context: "COGI by information condition and decision interval. Each cell is one 72-hour trajectory.",
+      device: "COGI by delivery device. Each value is one 72-hour trajectory.",
+    },
+    homepage: "← SAST Homepage",
+  },
+}[lang];
+
+const cards = featured.map((item: any) => {
+  const best = loadRun(item.key).runs.opus55;
+  const { template, instance } = findTask(item.key, lang);
+  return { ...item, truth: best.truth, score: best.score, template: template.id, person: instance.label };
+});
+
+// Week chart geometry, in SVG units.
+const week = { width: 540, height: 300, left: 50, right: 180, top: 14, bottom: 54, min: 60, max: 90 };
+const weekX = (day: number) => week.left + (day / 6) * (week.width - week.left - week.right);
+const weekY = (value: number) =>
+  week.top + (1 - (value - week.min) / (week.max - week.min)) * (week.height - week.top - week.bottom);
+// Keep nearby endpoint labels separate without moving their data points.
+const weekLabels = new Map<string, number>();
+let previousLabelY = week.top - 55;
+[...weekLearning].sort((a, b) => b.days[6] - a.days[6]).forEach((line) => {
+  const y = Math.max(weekY(line.days[6]), previousLabelY + 55);
+  weekLabels.set(line.name, y);
+  previousLabelY = y;
+});
+
+const heat = (value: number) => {
+  const t = Math.max(0, Math.min(1, (value - 50) / 50));
+  return `background:color-mix(in srgb, #1f3f5f ${Math.round(t * 82)}%, var(--color-paper-2));color:${t > 0.55 ? "var(--color-on-dark)" : "var(--color-ink)"}`;
+};
+---
+
+<Layout title={TITLE} description={copy.description}>
+  <article class="pptbench-page diabagent-page max-w-5xl mx-auto px-5 sm:px-8">
+    <SubNav active="overview" />
+
+    <header class="pptbench-hero pt-12 md:pt-16">
+      <h1 class="font-serif font-bold tracking-tight text-ink break-words">
+        DiabAgent<span class="da-title-rest">{copy.titleRest}</span>
+      </h1>
+      <p class="da-abstract mt-6">{copy.abstract}</p>
+      <p class="pptbench-meta mt-4">{META}</p>
+      <div class="mt-7 flex flex-wrap gap-3">
+        {
+          heroLinks.map((link: any) =>
+            link.href ? (
+              <Link href={pagePath(lang, link.href)} size="md" style={link.style}>{link.label}</Link>
+            ) : (
+              <span
+                role="link"
+                aria-disabled="true"
+                aria-label={copy.soonLabel(link.label)}
+                title={copy.soonLabel(link.label)}
+                class="inline-flex items-center justify-center px-4 py-2 text-[0.95rem] font-medium text-ink-3 border border-ink/10 cursor-default select-none">
+                {link.label} · {copy.soon}
+              </span>
+            ),
+          )
+        }
+      </div>
+    </header>
+
+    <section id="apc" class="da-section mt-20">
+      <h2>{copy.apcTitle}</h2>
+      <p class="da-lede mt-4">{copy.apcLede}</p>
+      <figure class="mt-8">
+        <ApcSteps />
+        <Caption n={1}>{copy.captions.apc}</Caption>
+      </figure>
+    </section>
+
+    <section id="sim" class="da-section mt-20">
+      <h2>{copy.simTitle}</h2>
+      <p class="da-lede mt-4">{copy.simLede}</p>
+      <ul class="da-dimensions mt-8">
+        {
+          simDimensions.map((item: any) => (
+            <li>
+              <strong>{item.value}</strong>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+      <h3 class="da-subhead mt-12">{copy.coverage}</h3>
+      <p class="da-lede mt-2">{copy.coverageLede}</p>
+      <figure class="mt-5">
+        <CoverageMap />
+        <Caption n={2}>{copy.captions.coverage}</Caption>
+      </figure>
+    </section>
+
+    <section id="bench" class="da-section mt-20">
+      <h2>{copy.benchTitle}</h2>
+      <p class="da-lede mt-4">{copy.benchLede}</p>
+      <figure class="mt-7">
+        <ScoreBars compact />
+        <Caption n={3}>{copy.captions.bars}</Caption>
+      </figure>
+      <ul class="da-links mt-8">
+        {
+          copy.benchPages.map((page) => (
+            <li>
+              <a href={pagePath(lang, page.href)}>
+                <strong>{page.title} <span aria-hidden="true">→</span></strong>
+                <span>{page.line}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <h3 class="da-subhead mt-12">{copy.worthReading}</h3>
+      <ul class="da-cards mt-5">
+        {
+          cards.map((card: any) => (
+            <li>
+              <a href={pagePath(lang, `/diabagent/runs/?task=${card.key}&model=opus55`)} class="da-card">
+                <span class="da-card-tag">{card.tag}</span>
+                <Spark truth={card.truth} color={modelById.opus55.color} label={copy.sparkLabel(card.template)} />
+                <strong>{score(card.score)}</strong>
+                <span class="da-card-person">{card.template} · {card.person}</span>
+                <p>{card.line}</p>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section id="findings" class="da-section mt-20">
+      <h2>{copy.findings}</h2>
+
+      <div class="da-finding">
+        <div>
+          <h3>{copy.weekTitle}</h3>
+          <p>{copy.weekBody}</p>
+        </div>
+        <figure>
+          <div class="da-scroll">
+          <svg class="da-week" viewBox={`0 0 ${week.width} ${week.height}`} role="img" aria-label={copy.weekLabel}>
+            {[60, 70, 80, 90].map((v) => (
+              <g>
+                <line x1={week.left} x2={week.width - week.right} y1={weekY(v)} y2={weekY(v)} class="da-grid" />
+                <text x={week.left - 9} y={weekY(v) + 4.5} text-anchor="end" class="da-axis">{v}</text>
+              </g>
+            ))}
+            <line x1={week.left} x2={week.left} y1={weekY(90)} y2={weekY(60)} class="da-axis-line" />
+            <line x1={week.left} x2={week.width - week.right} y1={weekY(60)} y2={weekY(60)} class="da-axis-line" />
+            <text transform={`translate(13 ${(weekY(60) + weekY(90)) / 2}) rotate(-90)`} text-anchor="middle" class="da-axis-title">COGI</text>
+            {[0, 1, 2, 3, 4, 5, 6].map((d) => (
+              <g>
+                <line x1={weekX(d)} x2={weekX(d)} y1={weekY(60)} y2={weekY(60) + 5} class="da-axis-line" />
+                <text x={weekX(d)} y={weekY(60) + 22} text-anchor="middle" class="da-axis">{d + 1}</text>
+              </g>
+            ))}
+            <text x={(weekX(0) + weekX(6)) / 2} y={week.height - 6} text-anchor="middle" class="da-axis-title">{copy.dayAxis}</text>
+            {[...weekLearning].reverse().map((line: any) => (
+              <g>
+                <polyline
+                  fill="none"
+                  stroke={line.color}
+                  stroke-width="1.5"
+                  points={line.days.map((v: number, d: number) => `${weekX(d)},${weekY(v)}`).join(" ")}
+                />
+                {line.days.map((v: number, d: number) => <circle cx={weekX(d)} cy={weekY(v)} r="2.6" fill={line.color} />)}
+                <line x1={weekX(6) + 3} y1={weekY(line.days[6])} x2={weekX(6) + 13} y2={weekLabels.get(line.name)} stroke={line.color} stroke-width="0.8" />
+                <text x={weekX(6) + 16} y={weekLabels.get(line.name)! + 4.5} fill={line.color} class="da-week-label">
+                  {line.name.split(" + ").map((part: string, index: number) => (
+                    <tspan x={weekX(6) + 16} dy={index ? "1.1em" : "0"}>{index ? "+ " : ""}{part}</tspan>
+                  ))}
+                </text>
+              </g>
+            ))}
+          </svg>
+          </div>
+          <Caption n={4}>{copy.captions.week}</Caption>
+        </figure>
+      </div>
+
+      <div class="da-finding">
+        <div>
+          <h3>{copy.contextTitle}</h3>
+          <p>{copy.contextBody}</p>
+        </div>
+        <figure>
+          <div class="da-grid-table" role="table" aria-label={copy.contextLabel}>
+            <div role="row" class="da-grid-row is-head">
+              <span role="columnheader">{copy.contextHead}</span>
+              {contextStudy.intervals.map((label: string) => <span role="columnheader">{label}</span>)}
+            </div>
+            {
+              contextStudy.rows.map((row: any) => (
+                <div role="row" class="da-grid-row">
+                  <span role="rowheader">{row.name}</span>
+                  {row.scores.map((value: number) => (
+                    <span role="cell" class="da-cell" style={heat(value)}>{score1(value)}</span>
+                  ))}
+                </div>
+              ))
+            }
+          </div>
+          <Caption n={5}>{copy.captions.context}</Caption>
+        </figure>
+      </div>
+
+      <div class="da-finding">
+        <div>
+          <h3>{copy.deviceTitle}</h3>
+          <p>{copy.deviceBody}</p>
+          <ul class="da-legend">
+            <li><i style="background:#a9afb4" />{copy.devices[0]}</li>
+            <li><i style="background:#1f3f5f" />{copy.devices[1]}</li>
+            <li><i style="background:#a8432a" />{copy.devices[2]}</li>
+          </ul>
+        </div>
+        <figure>
+          <ul class="da-device">
+            {
+              deviceStudy.map((row: any) => (
+                <li>
+                  <h4>{row.name}</h4>
+                  <div><i style={`width:${row.pens}%;background:#a9afb4`} /><span>{score1(row.pens)}</span></div>
+                  <div><i style={`width:${row.pump}%;background:#1f3f5f`} /><span>{score1(row.pump)}</span></div>
+                  <div><i style={`width:${row.hcl}%;background:#a8432a`} /><span>{score1(row.hcl)}</span></div>
+                </li>
+              ))
+            }
+          </ul>
+          <Caption n={6}>{copy.captions.device}</Caption>
+        </figure>
+      </div>
+    </section>
+
+    <div class="mt-16 mb-24 border-t border-line pt-6">
+      <a href="https://net9.org/" class="inline-flex items-center gap-1 text-[0.95rem] text-accent hover:text-accent-hover transition">
+        {copy.homepage}
+      </a>
+    </div>
+  </article>
+</Layout>

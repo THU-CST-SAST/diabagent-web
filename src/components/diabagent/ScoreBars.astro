@@ -1,31 +1,43 @@
 ---
-/** COGI standings as bars on the full 0-100 scale; baselines stay muted. */
-import { baselines, models, score } from "@/lib/diabagent.js";
+/** COGI standings as a dot plot; open points are baselines. */
+import { contentFor, models, score } from "@/lib/diabagent.js";
+import type { Lang } from "@/lib/i18n";
 
 interface Props {
   /** Keep only the strongest baseline, for the overview page. */
   compact?: boolean;
 }
 const { compact = false } = Astro.props;
+const lang = Astro.currentLocale as Lang;
+const { baselines } = contentFor(lang);
 
 const rows = [
   ...models.map((m: any) => ({ name: m.name, value: m.score, color: m.color, kind: "model" })),
   ...baselines
     .slice(0, compact ? 1 : baselines.length)
-    .map((b: any) => ({ name: b.name, value: b.score, color: "var(--color-ink-4)", kind: "baseline" })),
+    .map((b: any) => ({ name: b.name, value: b.score, color: "var(--color-ink-3)", kind: "baseline" })),
 ].sort((a, b) => b.value - a.value);
+
+// Six intervals, matching the gridlines in .da-bar-track.
+const TICKS = [50, 55, 60, 65, 70, 75, 80];
+const at = (value: number) => ((value - TICKS[0]) / (TICKS[TICKS.length - 1] - TICKS[0])) * 100;
 ---
 
-<ol class="da-bars" aria-label="COGI by controller">
+<ol class="da-bars" aria-label={lang === "zh" ? "各控制器的 COGI" : "COGI by controller"}>
   {
     rows.map((row) => (
       <li class:list={["da-bar", row.kind === "baseline" && "is-baseline"]}>
         <span class="da-bar-name">{row.name}</span>
         <span class="da-bar-track">
-          <span class="da-bar-fill" style={`width:${row.value}%;background:${row.color}`} />
+          <span class="da-bar-fill" style={`left:${at(row.value)}%;background:${row.color}`} />
         </span>
         <span class="da-bar-value">{score(row.value)}</span>
       </li>
     ))
   }
+  <li class="da-bar is-axis" aria-hidden="true">
+    <span class="da-bar-name">COGI</span>
+    <span class="da-bar-axis">{TICKS.map((tick) => <i style={`left:${at(tick)}%`}>{tick}</i>)}</span>
+    <span></span>
+  </li>
 </ol>

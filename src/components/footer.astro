@@ -1,8 +1,14 @@
 ---
 import Container from "@/components/container.astro";
+import { pagePath, type Lang } from "@/lib/i18n";
 import { projectPath } from "@/lib/project-paths";
 
 const year = new Date().getFullYear();
+const lang = Astro.currentLocale as Lang;
+const copy = {
+  zh: { home: "首页", homepage: "SAST 主页", motto: "THU CST SAST。评测 · 构建 · 突破。" },
+  en: { home: "Home", homepage: "SAST Homepage", motto: "THU CST SAST. Benchmark. Build. Break." },
+}[lang];
 ---
 
 <footer class="mt-24 bg-dark text-on-dark">
@@ -10,17 +16,17 @@ const year = new Date().getFullYear();
     <div
       class="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
       <div class="flex flex-col gap-3">
-        <a href={projectPath('/')} class="flex items-center gap-2 w-fit">
+        <a href={pagePath(lang, '/')} class="flex items-center gap-2 w-fit">
           <img src={projectPath('/brand/sast.png')} width="28" height="28" alt="SAST" class="shrink-0 object-contain" />
-          <span class="font-serif font-bold tracking-tight text-[15px]"
+          <span class="font-serif font-semibold text-[15px]"
             >THU CST SAST</span
           >
         </a>
       </div>
 
-      <nav class="flex flex-wrap gap-x-8 gap-y-3 text-sm">
-        <a href={projectPath('/')} class="text-ink-4 hover:text-on-dark transition">Home</a>
-        <a href="https://net9.org/" class="text-ink-4 hover:text-on-dark transition">SAST Homepage</a>
+      <nav class="flex flex-wrap gap-x-8 gap-y-3 text-[0.95rem]">
+        <a href={pagePath(lang, '/')} class="text-ink-4 hover:text-on-dark transition">{copy.home}</a>
+        <a href="https://net9.org/" class="text-ink-4 hover:text-on-dark transition">{copy.homepage}</a>
         <a
           href="https://github.com/THU-CST-SAST/diabagent-web"
           target="_blank"
@@ -32,8 +38,8 @@ const year = new Date().getFullYear();
     </div>
 
     <div
-      class="mt-12 pt-6 border-t border-white/10 text-xs text-ink-3">
-      &copy; {year} THU CST SAST. Benchmark. Build. Break.
+      class="mt-12 pt-6 border-t border-white/10 text-[0.95rem] text-ink-4">
+      &copy; {year} {copy.motto}
     </div>
   </Container>
 </footer>
