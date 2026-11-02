@@ -4,7 +4,7 @@
   --da-line: var(--color-line-2);
   --da-muted: var(--color-ink-2);
   --da-soft: var(--color-ink-3);
-  --da-accent: #c2673c;
+  --da-accent: #287da2;
 }
 
 .diabagent-page .pptbench-hero h1 {
@@ -176,7 +176,7 @@
   display: flex;
   flex-direction: column;
   border-radius: 0.8rem;
-  background: #fbf8f1;
+  background: #ffffff;
   box-shadow: 0 6px 22px rgb(39 61 50 / 7%);
   padding: 1.1rem 1.15rem;
 }
@@ -287,7 +287,7 @@
 }
 
 .diabagent-page .da-ov-score strong {
-  color: #a2522c;
+  color: #286b98;
   font-family: var(--font-serif);
   font-size: 1.5rem;
 }
@@ -319,7 +319,7 @@
 }
 
 .diabagent-page .da-ov-arrow.is-truth {
-  color: #a2522c;
+  color: #286b98;
 }
 
 .diabagent-page .da-ov-arrow em {
@@ -413,7 +413,7 @@
 }
 
 .diabagent-page .da-apc-node rect {
-  fill: #fbf8f1;
+  fill: #ffffff;
   stroke: var(--color-line);
   stroke-width: 2;
   transition: fill 0.3s, stroke 0.3s;
@@ -884,7 +884,7 @@
 }
 
 .diabagent-page .da-card-tag {
-  color: #a2522c;
+  color: #286b98;
   font-size: 0.95rem;
   font-weight: 600;
 }
@@ -1097,7 +1097,7 @@
 }
 
 .diabagent-page .da-template-id {
-  color: #a2522c;
+  color: #286b98;
   font-family: var(--font-serif);
   font-size: 1.15rem;
   font-weight: 700;

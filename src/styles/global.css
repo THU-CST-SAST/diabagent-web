@@ -4,37 +4,37 @@
 
 /* ============================================================
    Design tokens — aligned with einsia-homepage.
-   Warm paper surfaces and deep green ink, with muted sage support tones.
-   Headings: Georgia serif · Body: Inter.
+   Cool white surfaces, neutral ink and restrained blue accents.
+   Headings and body: Inter.
    ============================================================ */
 @theme {
   --font-sans:
     "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-serif: "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
 
   /* Surfaces — einsia-homepage --color-bg-* */
-  --color-paper: #f4efe4;
-  --color-paper-2: #ebebe0;
-  --color-paper-3: #e3e8db;
-  --color-paper-white: #f4efe4;
-  --color-dark: #243e34;
-  --color-on-dark: #f5f1e8;
+  --color-paper: #f8fafb;
+  --color-paper-2: #edf1f4;
+  --color-paper-3: #e5eef6;
+  --color-paper-white: #f8fafb;
+  --color-dark: #243d50;
+  --color-on-dark: #f8fafb;
 
   /* Ink (text + dark surfaces) — einsia-homepage --color-text-* */
-  --color-ink: #273d32;
-  --color-ink-2: #5d6e60;
-  --color-ink-3: #758a71;
-  --color-ink-4: #a4b0a2;
-  --color-ink-5: #b8c2ac;
+  --color-ink: #252b30;
+  --color-ink-2: #58646e;
+  --color-ink-3: #6c7b87;
+  --color-ink-4: #9aa8b3;
+  --color-ink-5: #c6d1da;
 
   /* Lines — einsia-homepage border tones */
-  --color-line: #a4b0a2;
-  --color-line-2: #b8c2ac;
+  --color-line: #9aa8b3;
+  --color-line-2: #c6d1da;
 
   /* Accent — homepage green, used for hyperlinks */
-  --color-accent: #3b5545;
-  --color-accent-hover: #192c22;
+  --color-accent: #286b98;
+  --color-accent-hover: #1c4e72;
 }
 
 /*

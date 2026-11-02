@@ -5,7 +5,7 @@
   --ppt-line: var(--color-line-2);
   --ppt-muted: var(--color-ink-2);
   --ppt-muted-light: var(--color-ink-3);
-  --ppt-active: #c2673c;
+  --ppt-active: #287da2;
   --ppt-active-soft: rgb(194 103 60 / 18%);
 }
 
