@@ -1,0 +1,33 @@
+# build output
+dist/
+# Local evaluation sources, caches and release staging (never deployed)
+.local/
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.claude/
+.vscode/
+tmp_osworld_rerecord_clean/
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
+
+# Local source notes, browser tooling, and previews
+.work/
+dist-embodiedrsi/
+__pycache__/
+*.pyc

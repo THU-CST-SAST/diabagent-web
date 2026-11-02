@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@plugin "@tailwindcss/typography";
+
+/* ============================================================
+   Design tokens — aligned with einsia-homepage.
+   Warm paper surfaces and deep green ink, with muted sage support tones.
+   Headings: Georgia serif · Body: Inter.
+   ============================================================ */
+@theme {
+  --font-sans:
+    "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif: Georgia, "Times New Roman", serif;
+
+  /* Surfaces — einsia-homepage --color-bg-* */
+  --color-paper: #f4efe4;
+  --color-paper-2: #ebebe0;
+  --color-paper-3: #e3e8db;
+  --color-paper-white: #f4efe4;
+  --color-dark: #243e34;
+  --color-on-dark: #f5f1e8;
+
+  /* Ink (text + dark surfaces) — einsia-homepage --color-text-* */
+  --color-ink: #273d32;
+  --color-ink-2: #5d6e60;
+  --color-ink-3: #758a71;
+  --color-ink-4: #a4b0a2;
+  --color-ink-5: #b8c2ac;
+
+  /* Lines — einsia-homepage border tones */
+  --color-line: #a4b0a2;
+  --color-line-2: #b8c2ac;
+
+  /* Accent — homepage green, used for hyperlinks */
+  --color-accent: #3b5545;
+  --color-accent-hover: #192c22;
+}
+
+/*
+  Tailwind CSS v4 defaults the border color to `currentColor`; use the
+  shared sage border tone across the design.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-line, currentColor);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+  }
+
+  /* Serif display headings, matching einsia-homepage. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    letter-spacing: -0.011em;
+  }
+}
