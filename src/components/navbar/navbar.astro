@@ -1,5 +1,6 @@
 ---
 import Container from "@/components/container.astro";
+import { projectPath } from "@/lib/project-paths";
 import { Astronav, MenuItems, MenuIcon } from "astro-navbar";
 
 interface Props {
@@ -34,20 +35,11 @@ const isActive = (path: string) =>
     <div class="flex flex-col lg:flex-row justify-between items-center py-4">
       <Astronav>
         <div class="flex w-full lg:w-auto items-center justify-between">
-          <a href={hrefFor("/")} class="flex items-center gap-2 group" aria-label="Navers lab — Einsia">
-            <svg
-              class="w-7 h-7 shrink-0 text-ink"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true">
-              <path
-                d="M12 0C18.6274 0 24 5.37258 24 12C24 14.8675 22.9924 17.4984 21.3145 19.5625L14.8779 12.9307L20.9814 10.8125L19.8154 7.45312L15.0889 9.09277L16.8701 4.41797L13.5469 3.15234L11.2471 9.18945L6.7334 4.54004L4.31152 6.89062L8.62695 11.3369L3.1582 13.2363L4.32422 16.5957L9.05078 14.9531L7.27051 19.6299L10.5928 20.8965L12.6533 15.4844L18.8389 21.8574C16.8983 23.2063 14.5424 24 12 24C5.37269 23.9999 0 18.6273 0 12C0 5.37266 5.37269 0.000131941 12 0Z"
-              ></path>
-            </svg>
+          <a href={hrefFor("/")} class="flex items-center gap-2 group" aria-label="THU CST SAST — Einsia">
+            <img src={projectPath('/brand/sast.png')} width="32" height="32" alt="SAST" class="shrink-0 object-contain" />
             <span
               class="font-serif font-bold tracking-tight text-ink text-xl group-hover:underline underline-offset-4">
-              Navers lab
+              THU CST SAST
             </span>
           </a>
           <div class="block lg:hidden">
