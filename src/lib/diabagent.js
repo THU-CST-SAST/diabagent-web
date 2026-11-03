@@ -43,7 +43,7 @@ export const FACTS = {
 const heroLinks = [
   { label: "Benchmark", href: "/diabagent/leaderboard/", style: "primary" },
   { label: "Paper", href: "", style: "outline" },
-  { label: "Code", href: "", style: "outline" },
+  { label: "Code", href: "https://github.com/THU-CST-SAST/DiabAgent", style: "outline" },
 ];
 
 // Simulator capabilities, not the fixed SweetBench cohort. Counts exclude test models.

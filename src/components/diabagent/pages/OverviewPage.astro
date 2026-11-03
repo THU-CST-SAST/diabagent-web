@@ -151,7 +151,7 @@ const heat = (value: number) => {
         {
           heroLinks.map((link: any) =>
             link.href ? (
-              <Link href={pagePath(lang, link.href)} size="md" style={link.style}>{link.label}</Link>
+              <Link href={link.href.startsWith("https://") ? link.href : pagePath(lang, link.href)} size="md" style={link.style}>{link.label}</Link>
             ) : (
               <span
                 role="link"
