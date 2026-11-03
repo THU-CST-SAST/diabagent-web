@@ -10,7 +10,8 @@ results are retained. Main-evaluation baselines use the matched 212-world,
 decisions remain hourly; both schedules allow up to six extra event-triggered
 decisions per local day.
 
-The site is bilingual: Chinese at the root and English under `/en/`, with a
+The site is bilingual: the domain root opens English under `/en/`, and Chinese
+is available under `/diabagent/`, with a
 switch in the header. Page text lives in each page's `copy`; Chinese for the
 generated data is in `src/lib/diabagent.zh.js`. Agents' recorded rationales stay
 in their original English.

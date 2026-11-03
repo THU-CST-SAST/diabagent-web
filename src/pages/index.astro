@@ -1,5 +1,4 @@
 ---
-import OverviewPage from "@/components/diabagent/pages/OverviewPage.astro";
+import { projectPath } from "@/lib/project-paths";
+return Astro.redirect(projectPath("/en/"));
 ---
-
-<OverviewPage />
