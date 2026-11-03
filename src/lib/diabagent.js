@@ -42,7 +42,7 @@ export const FACTS = {
 // An empty href renders as a disabled "coming soon" button.
 const heroLinks = [
   { label: "Benchmark", href: "/diabagent/leaderboard/", style: "primary" },
-  { label: "Paper", href: "", style: "outline" },
+  { label: "Paper", href: "https://arxiv.org/abs/2611.03601", style: "outline" },
   { label: "Code", href: "https://github.com/THU-CST-SAST/DiabAgent", style: "outline" },
 ];
 
